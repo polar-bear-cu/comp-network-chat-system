@@ -5,6 +5,7 @@ export const useAuthStore = create((set) => ({
   authUser: null,
   isCheckingAuth: true,
   isSigningUp: false,
+  isLoggingIn: false,
 
   checkAuth: async () => {
     try {
@@ -29,6 +30,21 @@ export const useAuthStore = create((set) => ({
       throw err;
     } finally {
       set({ isSigningUp: false });
+    }
+  },
+
+  login: async (username, password) => {
+    set({ isLoggingIn: true });
+    try {
+      const res = await axiosInstance.post("/auth/login", {
+        username,
+        password,
+      });
+      set({ authUser: res.data });
+    } catch (err) {
+      throw err;
+    } finally {
+      set({ isLoggingIn: false });
     }
   },
 }));

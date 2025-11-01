@@ -74,7 +74,7 @@ const SignupPage = () => {
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-2 top-3"
+              className="cursor-pointer absolute right-2 top-3"
             >
               {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
             </button>
