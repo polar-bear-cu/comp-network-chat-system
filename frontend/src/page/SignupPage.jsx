@@ -2,12 +2,13 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageLoader from "./PageLoader";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const SignupPage = () => {
   const navigate = useNavigate();
-  const { checkAuth, isCheckingAuth, signup, authUser } = useAuthStore();
+  const { checkAuth, isCheckingAuth, signup, authUser, isSigningUp } =
+    useAuthStore();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -15,7 +16,6 @@ const SignupPage = () => {
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -31,14 +31,10 @@ const SignupPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
-    setLoading(true);
-
     try {
       await signup(formData.username.trim(), formData.password.trim());
     } catch (err) {
       setErrorMessage(err?.response?.data?.message || "Signup failed");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -58,7 +54,7 @@ const SignupPage = () => {
             }
             type="text"
             placeholder="Enter your username"
-            disabled={isLoading}
+            disabled={isSigningUp}
             className="border p-2 rounded-md"
           />
 
@@ -71,7 +67,7 @@ const SignupPage = () => {
               }
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
-              disabled={isLoading}
+              disabled={isSigningUp}
               className="border w-full p-2 rounded-md pr-10"
             />
 
@@ -90,10 +86,11 @@ const SignupPage = () => {
 
           <Button
             type="submit"
-            disabled={isLoading || !formData.username || !formData.password}
+            disabled={isSigningUp || !formData.username || !formData.password}
             className="cursor-pointer bg-primary text-white py-2 rounded-md"
           >
-            {isLoading ? "Creating..." : "Create Account"}
+            {isSigningUp ? "Signing up..." : "Sign Up"}
+            {isSigningUp && <Loader className="animate-spin" />}
           </Button>
         </form>
 

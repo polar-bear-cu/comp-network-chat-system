@@ -4,6 +4,7 @@ import { create } from "zustand";
 export const useAuthStore = create((set) => ({
   authUser: null,
   isCheckingAuth: true,
+  isSigningUp: false,
 
   checkAuth: async () => {
     try {
@@ -17,6 +18,7 @@ export const useAuthStore = create((set) => ({
   },
 
   signup: async (username, password) => {
+    set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/auth/signup", {
         username,
@@ -25,6 +27,8 @@ export const useAuthStore = create((set) => ({
       set({ authUser: res.data });
     } catch (err) {
       throw err;
+    } finally {
+      set({ isSigningUp: false });
     }
   },
 }));
