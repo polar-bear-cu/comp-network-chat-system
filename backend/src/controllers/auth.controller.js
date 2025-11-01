@@ -1,0 +1,38 @@
+import { generateToken } from "../lib/utils.js";
+import User from "../model/user.model.js";
+import bcrypt from "bcryptjs";
+
+export async function signup(req, res) {
+  const { username, password } = req.body;
+  try {
+    if (!username || !password) {
+      return res.status(400).json({ message: "Missing username or password" });
+    }
+    if (password.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters" });
+    }
+
+    const user = await User.findOne({ username });
+    if (user) {
+      return res.status(400).json({ message: "Username already exists" });
+    }
+
+    const salt = await bcrypt.genSalt(20);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = new User({ username, password: hashedPassword });
+    if (newUser) {
+      generateToken(newUser._id, res);
+      await newUser.save();
+
+      res.status(201).json({
+        _id: newUser._id,
+        username: newUser.username,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
