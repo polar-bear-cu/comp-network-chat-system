@@ -65,3 +65,8 @@ export async function login(req, res) {
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
+
+export async function logout(req, res) {
+  res.cookie("jwt", "", { maxAge: 0 });
+  res.status(200).json({ message: "Log out successfully" });
+}
