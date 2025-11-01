@@ -15,7 +15,7 @@ const LoginPage = () => {
     if (authUser) {
       navigate("/chat");
     }
-  }, [authUser]);
+  }, [authUser, navigate]);
 
   if (isCheckingAuth) return <PageLoader />;
 
