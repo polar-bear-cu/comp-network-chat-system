@@ -19,7 +19,7 @@ export async function signup(req, res) {
       return res.status(400).json({ message: "Username already exists" });
     }
 
-    const salt = await bcrypt.genSalt(20);
+    const salt = await bcrypt.genSalt(8);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new User({ username, password: hashedPassword });
@@ -32,6 +32,35 @@ export async function signup(req, res) {
         username: newUser.username,
       });
     }
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+export async function login(req, res) {
+  const { username, password } = req.body;
+  try {
+    if (!username || !password) {
+      return res.status(400).json({ message: "Missing username or password" });
+    }
+
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(400).json({ message: "Username not found" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ message: "Username and password do not match" });
+    }
+
+    generateToken(user._id, res);
+    res.status(200).json({
+      _id: user._id,
+      username: user.username,
+    });
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error" });
   }
