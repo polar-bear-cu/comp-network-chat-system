@@ -18,6 +18,11 @@ const GroupChatHeader = () => {
   if (!selectedGroup) return null;
 
   const members = selectedGroup?.members || [];
+  const sortedMembers = [...members].sort((a, b) => {
+    if (a._id === selectedGroup.ownerId) return -1;
+    if (b._id === selectedGroup.ownerId) return 1;
+    return 0;
+  });
 
   useEffect(() => {
     const handleEscKey = (event) => {
@@ -59,7 +64,7 @@ const GroupChatHeader = () => {
             </DialogHeader>
 
             <div className="space-y-2">
-              {members.map((member) => (
+              {sortedMembers.map((member) => (
                 <div
                   key={member._id}
                   className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted transition"
@@ -68,8 +73,9 @@ const GroupChatHeader = () => {
                     {member.username[0].toUpperCase()}
                   </div>
                   <p className="text-sm">
-                    {member.username}{" "}
-                    {member._id === authUser._id ? "(Me)" : ""}
+                    {member.username}
+                    {member._id === selectedGroup.ownerId && " (Owner)"}
+                    {member._id === authUser._id && " (Me)"}
                   </p>
                 </div>
               ))}
