@@ -10,11 +10,16 @@ import { useChatStore } from "@/store/useChatStore";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageLoader from "./PageLoader";
+import GroupList from "@/components/GroupList";
+import { useGroupStore } from "@/store/useGroupStore";
+import CreateGroupPopup from "@/components/CreateGroupPopup";
+import GroupChatContainer from "@/components/GroupChatContainer";
 
 const ChatPage = () => {
   const navigate = useNavigate();
   const { authUser, isCheckingAuth, checkAuth } = useAuthStore();
   const { activeTab, selectedUser } = useChatStore();
+  const { openCreateGroupPopup, selectedGroup } = useGroupStore();
 
   useEffect(() => {
     checkAuth();
@@ -36,7 +41,13 @@ const ChatPage = () => {
             <ActiveTabSwitch />
 
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {activeTab === "chats" ? <ChatsList /> : <ContactList />}
+              {activeTab === "chats" ? (
+                <ChatsList />
+              ) : activeTab === "contacts" ? (
+                <ContactList />
+              ) : activeTab === "groups" ? (
+                <GroupList />
+              ) : null}
             </div>
           </div>
 
@@ -44,12 +55,16 @@ const ChatPage = () => {
           <div className="flex-1 flex flex-col bg-card/50 backdrop-blur-sm">
             {authUser && selectedUser ? (
               <ChatContainer />
+            ) : authUser && selectedGroup ? (
+              <GroupChatContainer />
             ) : (
               <NoConversationPlaceholder />
             )}
           </div>
         </BorderAnimatedContainer>
       </div>
+
+      {openCreateGroupPopup && <CreateGroupPopup />}
     </div>
   );
 };

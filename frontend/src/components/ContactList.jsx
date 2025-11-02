@@ -3,6 +3,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useEffect } from "react";
 import UsersLoadingSkeleton from "./UserLoadingSkeleton";
 import { User } from "lucide-react";
+import NoContactFound from "./NoContactFound";
 
 const ContactList = () => {
   const { getAllContacts, allContacts, setSelectedUser, isUsersLoading } =
@@ -15,11 +16,8 @@ const ContactList = () => {
 
   if (isUsersLoading) return <UsersLoadingSkeleton />;
 
-  if (!Array.isArray(allContacts) || allContacts.length === 0) {
-    return (
-      <div className="text-foreground text-center py-4">No contacts found</div>
-    );
-  }
+  if (!Array.isArray(allContacts) || allContacts.length === 0)
+    return <NoContactFound />;
 
   return (
     <>

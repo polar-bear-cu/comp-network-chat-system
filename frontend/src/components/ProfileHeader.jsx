@@ -1,9 +1,11 @@
-import { LogOutIcon, User } from "lucide-react";
+import { LogOut, Plus, User } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "./ui/button";
+import { useGroupStore } from "@/store/useGroupStore";
 
 const ProfileHeader = () => {
   const { logout, authUser } = useAuthStore();
+  const { setOpenCreateGroupPopup } = useGroupStore();
 
   if (!authUser) return null;
 
@@ -28,9 +30,18 @@ const ProfileHeader = () => {
           <Button
             variant={"outline"}
             className="text-primary transition-colors"
+            onClick={() => {
+              setOpenCreateGroupPopup(true);
+            }}
+          >
+            <Plus className="w-5 h-5" />
+          </Button>
+          <Button
+            variant={"outline"}
+            className="text-primary transition-colors"
             onClick={logout}
           >
-            <LogOutIcon className="w-5 h-5" />
+            <LogOut className="w-5 h-5" />
           </Button>
         </div>
       </div>

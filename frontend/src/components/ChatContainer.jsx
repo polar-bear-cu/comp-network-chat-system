@@ -5,6 +5,7 @@ import MessagesLoadingSkeleton from "./MessagesLoadingSkeleton";
 import NoChatHistoryPlaceholder from "./NoChatHistoryPlaceholder";
 import MessageInput from "./MessageInput";
 import ChatHeader from "./ChatHeader";
+import { formatMessageTime } from "@/lib/utils";
 
 const ChatContainer = () => {
   const {
@@ -17,32 +18,6 @@ const ChatContainer = () => {
   } = useChatStore();
   const { authUser } = useAuthStore();
   const bottomRef = useRef(null);
-
-  const formatMessageTime = (dateString) => {
-    const date = new Date(dateString);
-    const today = new Date();
-
-    const isToday =
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear();
-
-    if (isToday) {
-      return date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    }
-
-    return (
-      date.toLocaleDateString("en-GB") +
-      " " +
-      date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    );
-  };
 
   useEffect(() => {
     if (selectedUser?._id) {
