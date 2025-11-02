@@ -9,7 +9,7 @@ const ActiveTabSwitch = () => {
       <Button
         variant={"outline"}
         onClick={() => setActiveTab("chats")}
-        className={`px-4 py-2 cursor-pointer rounded-lg border transition-all duration-200 text-sm font-medium
+        className={`px-4 py-2 rounded-lg border transition-all duration-200 text-sm font-medium
 ${
   activeTab === "chats"
     ? "bg-primary/20 text-primary border-primary/50"
@@ -22,7 +22,7 @@ ${
       <Button
         variant={"outline"}
         onClick={() => setActiveTab("contacts")}
-        className={`px-4 py-2 cursor-pointer rounded-lg border transition-all duration-200 text-sm font-medium
+        className={`px-4 py-2 rounded-lg border transition-all duration-200 text-sm font-medium
 ${
   activeTab === "contacts"
     ? "bg-primary/20 text-primary border-primary/50"

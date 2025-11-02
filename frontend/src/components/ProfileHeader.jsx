@@ -8,7 +8,7 @@ const ProfileHeader = () => {
   if (!authUser) return null;
 
   return (
-    <div className="p-6 border-b border-border">
+    <div className="p-5 border-b border-border max-h-[84px]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border border-border">
@@ -27,7 +27,7 @@ const ProfileHeader = () => {
         <div className="flex gap-4 items-center">
           <Button
             variant={"outline"}
-            className="cursor-pointer text-primary transition-colors"
+            className="text-primary transition-colors"
             onClick={logout}
           >
             <LogOutIcon className="w-5 h-5" />

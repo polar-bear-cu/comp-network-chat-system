@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import NoChatsFound from "./NoChatsFound";
 import { useChatStore } from "@/store/useChatStore";
 import UsersLoadingSkeleton from "./UserLoadingSkeleton";
-import { UserCircle } from "lucide-react";
+import { User } from "lucide-react";
 
 const ChatsList = () => {
   const { getChatPartners, chats, isUsersLoading, setSelectedUser } =
@@ -24,7 +24,9 @@ const ChatsList = () => {
           onClick={() => setSelectedUser(chat)}
         >
           <div className="flex items-center gap-3">
-            <UserCircle className="w-12 h-12 text-foreground/50" />
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border border-border">
+              <User className="w-8 h-8 text-primary" />
+            </div>
             <h4 className="font-medium truncate text-foreground/90">
               {chat.username}
             </h4>

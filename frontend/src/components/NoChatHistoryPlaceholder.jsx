@@ -22,15 +22,15 @@ const NoChatHistoryPlaceholder = ({ name }) => {
         <div className="h-px w-32 mx-auto bg-linear-to-r from-transparent via-accent/30 to-transparent"></div>
       </div>
 
-      {/* Suggested buttons */}
+      {/* Suggested Texts */}
       <div className="flex flex-wrap gap-2 justify-center">
         {["👋 Say Hello", "🤝 How are you?", "📅 Meet up soon?"].map((text) => (
-          <button
+          <p
             key={text}
             className="px-4 py-2 text-xs font-medium rounded-full transition-colors text-accent-foreground bg-accent/10 hover:bg-accent/20"
           >
             {text}
-          </button>
+          </p>
         ))}
       </div>
     </div>

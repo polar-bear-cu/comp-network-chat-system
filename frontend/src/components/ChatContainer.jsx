@@ -18,37 +18,31 @@ const ChatContainer = () => {
   return (
     <>
       <ChatHeader />
-      <div className="flex-1 px-6 overflow-y-auto py-8">
+      <div className="flex-1 px-6 overflow-y-auto py-8 bg-transparent">
         {messages.length > 0 && !isMessagesLoading ? (
           <div className="max-w-3xl mx-auto space-y-6">
-            {messages.map((msg) => (
-              <div
-                key={msg._id}
-                className={`chat ${
-                  msg.senderId === authUser._id ? "chat-end" : "chat-start"
-                }`}
-              >
+            {messages.map((msg) => {
+              const isMe = msg.senderId === authUser._id;
+              return (
                 <div
-                  className={`chat-bubble relative rounded-lg p-4 ${
-                    msg.senderId === authUser._id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card text-card-foreground"
-                  }`}
+                  key={msg._id}
+                  className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                 >
-                  {msg.image && (
-                    <img
-                      src={msg.image}
-                      alt="Shared"
-                      className="rounded-lg h-48 w-full object-cover"
-                    />
-                  )}
-                  {msg.text && <p className="mt-2">{msg.text}</p>}
-                  <p className="text-xs mt-1 opacity-75 flex items-center gap-1">
-                    {new Date(msg.createdAt).toISOString().slice(11, 16)}
-                  </p>
+                  <div
+                    className={`relative rounded-lg p-4 border border-border max-w-[75%] whitespace-pre-wrap wrap-break-word shadow-sm ${
+                      isMe
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-card-foreground"
+                    }`}
+                  >
+                    {msg.text && <p>{msg.text}</p>}
+                    <p className="text-xs mt-1 opacity-70 text-muted-foreground">
+                      {new Date(msg.createdAt).toISOString().slice(11, 16)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : isMessagesLoading ? (
           <MessagesLoadingSkeleton />

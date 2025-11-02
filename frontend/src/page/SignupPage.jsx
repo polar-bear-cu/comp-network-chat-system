@@ -74,20 +74,21 @@ const SignupPage = () => {
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="cursor-pointer absolute right-2 top-3"
+              className="cursor-pointer disabled:cursor-not-allowed absolute right-2 top-3"
+              disabled={isSigningUp}
             >
               {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
             </button>
           </div>
 
           {errorMessage && (
-            <p className="text-red-600 text-center">{errorMessage}</p>
+            <p className="text-destructive text-center">{errorMessage}</p>
           )}
 
           <Button
             type="submit"
             disabled={isSigningUp || !formData.username || !formData.password}
-            className="cursor-pointer bg-primary text-white py-2 rounded-md"
+            className="bg-primary text-white py-2 rounded-md"
           >
             {isSigningUp ? "Signing up..." : "Sign Up"}
             {isSigningUp && <Loader className="animate-spin" />}
@@ -98,7 +99,8 @@ const SignupPage = () => {
           Already have an account?{" "}
           <button
             onClick={() => navigate("/login")}
-            className="cursor-pointer text-primary underline"
+            className="cursor-pointer disabled:cursor-not-allowed text-primary underline"
+            disabled={isSigningUp}
           >
             Login here
           </button>

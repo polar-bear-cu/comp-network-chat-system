@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useChatStore } from "@/store/useChatStore";
-import { UserCircle, X } from "lucide-react";
+import { User, X } from "lucide-react";
 
 const ChatHeader = () => {
   const { selectedUser, setSelectedUser } = useChatStore();
@@ -14,34 +14,22 @@ const ChatHeader = () => {
   }, [setSelectedUser]);
 
   return (
-    <div
-      className="flex justify-between items-center border-b max-h-[84px] px-6 flex-1"
-      style={{
-        backgroundColor: "var(--color-background)",
-        borderColor: "var(--color-border)",
-        color: "var(--color-foreground)",
-      }}
-    >
+    <div className="flex justify-between items-center border-b max-h-[84px] px-6 flex-1 bg-background border-border text-foreground">
       <div className="flex items-center space-x-3">
-        <div className="avatar online">
-          <div
-            className="w-12 rounded-full"
-            style={{ backgroundColor: "var(--color-card)" }}
-          >
-            <UserCircle className="w-6 h-6 text-foreground/60" />
-          </div>
+        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border border-border">
+          <User className="w-8 h-8 text-primary" />
         </div>
 
         <div>
-          <h3 className="text-slate-200 font-medium">
+          <h3 className="text-foreground font-medium">
             {selectedUser?.username || "No user selected"}
           </h3>
-          <p className="text-slate-400 text-sm">Online</p>
+          <p className="text-muted-foreground text-sm">Online</p>
         </div>
       </div>
 
       <button onClick={() => setSelectedUser(null)}>
-        <X className="w-5 h-5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer" />
+        <X className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" />
       </button>
     </div>
   );

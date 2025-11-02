@@ -17,11 +17,7 @@ const LandingPage = () => {
           <h1 className="text-2xl">Chat Website with Socket.io</h1>
         </div>
 
-        <Button
-          className={"cursor-pointer"}
-          onClick={handleClick}
-          size="landing"
-        >
+        <Button onClick={handleClick} size="landing">
           <p className="text-lg font-semibold text-background">Get Started</p>
         </Button>
       </main>
