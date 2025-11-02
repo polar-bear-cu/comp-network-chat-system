@@ -37,6 +37,7 @@ export const useGroupStore = create((set, get) => ({
   createGroup: async (name) => {
     try {
       const res = await axiosInstance.post("/groups", { name });
+      await get().getAllGroups();
       return { success: true, group: res.data };
     } catch (error) {
       return {
