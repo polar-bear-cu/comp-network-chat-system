@@ -112,10 +112,10 @@ export const useGroupStore = create((set, get) => ({
 
     socket.on("groupUpdated", (updatedGroup) => {
       const currentGroups = get().allGroups;
-      const updatedGroup = currentGroups.map((g) =>
+      const updatedGroups = currentGroups.map((g) =>
         g._id === updatedGroup._id ? updatedGroup : g
       );
-      set({ allGroups: updatedGroup });
+      set({ allGroups: updatedGroups });
 
       const selectedGroup = get().selectedGroup;
       if (selectedGroup && selectedGroup._id === updatedGroup._id) {
