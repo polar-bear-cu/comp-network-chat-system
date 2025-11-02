@@ -4,15 +4,25 @@ import { Button } from "./ui/button";
 
 const CreateGroupPopup = () => {
   const [groupName, setGroupName] = useState("");
-  const { setOpenCreateGroupPopup } = useGroupStore();
+  const [error, setError] = useState(null);
 
-  const handleSubmit = (e) => {
+  const { setOpenCreateGroupPopup, createGroup } = useGroupStore();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (groupName.trim()) {
-      alert(`Create group: ${groupName}`);
-      setOpenCreateGroupPopup(false);
-      setGroupName("");
+
+    if (!groupName.trim()) return;
+
+    const result = await createGroup(groupName);
+
+    if (!result.success) {
+      setError(result.message);
+      return;
     }
+
+    setError(null);
+    setGroupName("");
+    setOpenCreateGroupPopup(false);
   };
 
   return (
@@ -36,8 +46,13 @@ const CreateGroupPopup = () => {
                        focus:outline-none focus:ring-2 focus:ring-primary"
             placeholder="Enter group name"
             value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
+            onChange={(e) => {
+              setError(null);
+              setGroupName(e.target.value);
+            }}
           />
+
+          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
 
           <div className="flex justify-end gap-2">
             <Button
