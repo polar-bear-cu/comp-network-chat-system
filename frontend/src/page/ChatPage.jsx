@@ -10,11 +10,15 @@ import { useChatStore } from "@/store/useChatStore";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageLoader from "./PageLoader";
+import GroupList from "@/components/GroupList";
+import { useGroupStore } from "@/store/useGroupStore";
+import CreateGroupPopup from "@/components/CreateGroupPopup";
 
 const ChatPage = () => {
   const navigate = useNavigate();
   const { authUser, isCheckingAuth, checkAuth } = useAuthStore();
   const { activeTab, selectedUser } = useChatStore();
+  const { openCreateGroupPopup } = useGroupStore();
 
   useEffect(() => {
     checkAuth();
@@ -36,7 +40,13 @@ const ChatPage = () => {
             <ActiveTabSwitch />
 
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {activeTab === "chats" ? <ChatsList /> : <ContactList />}
+              {activeTab === "chats" ? (
+                <ChatsList />
+              ) : activeTab === "contacts" ? (
+                <ContactList />
+              ) : activeTab === "groups" ? (
+                <GroupList />
+              ) : null}
             </div>
           </div>
 
@@ -50,6 +60,8 @@ const ChatPage = () => {
           </div>
         </BorderAnimatedContainer>
       </div>
+
+      {openCreateGroupPopup && <CreateGroupPopup />}
     </div>
   );
 };

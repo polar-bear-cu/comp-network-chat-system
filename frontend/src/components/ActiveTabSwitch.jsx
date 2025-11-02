@@ -31,6 +31,19 @@ ${
       >
         Contacts
       </Button>
+
+      <Button
+        variant={"outline"}
+        onClick={() => setActiveTab("groups")}
+        className={`px-4 py-2 rounded-lg border transition-all duration-200 text-sm font-medium
+${
+  activeTab === "groups"
+    ? "bg-primary/20 text-primary border-primary/50"
+    : "text-muted-foreground border-border hover:bg-muted/30"
+}`}
+      >
+        Groups
+      </Button>
     </div>
   );
 };
