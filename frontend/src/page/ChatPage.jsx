@@ -13,12 +13,13 @@ import PageLoader from "./PageLoader";
 import GroupList from "@/components/GroupList";
 import { useGroupStore } from "@/store/useGroupStore";
 import CreateGroupPopup from "@/components/CreateGroupPopup";
+import GroupChatContainer from "@/components/GroupChatContainer";
 
 const ChatPage = () => {
   const navigate = useNavigate();
   const { authUser, isCheckingAuth, checkAuth } = useAuthStore();
   const { activeTab, selectedUser } = useChatStore();
-  const { openCreateGroupPopup } = useGroupStore();
+  const { openCreateGroupPopup, selectedGroup } = useGroupStore();
 
   useEffect(() => {
     checkAuth();
@@ -54,6 +55,8 @@ const ChatPage = () => {
           <div className="flex-1 flex flex-col bg-card/50 backdrop-blur-sm">
             {authUser && selectedUser ? (
               <ChatContainer />
+            ) : authUser && selectedGroup ? (
+              <GroupChatContainer />
             ) : (
               <NoConversationPlaceholder />
             )}

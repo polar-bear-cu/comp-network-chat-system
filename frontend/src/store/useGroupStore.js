@@ -1,6 +1,6 @@
 import axiosInstance from "@/lib/axios";
 import { create } from "zustand";
-import { useAuthStore } from "./useAuthStore";
+import { useChatStore } from "./useChatStore";
 
 export const useGroupStore = create((set, get) => ({
   allGroups: [],
@@ -9,7 +9,16 @@ export const useGroupStore = create((set, get) => ({
   openCreateGroupPopup: false,
 
   setOpenCreateGroupPopup: (open) => set({ openCreateGroupPopup: open }),
-  setSelectedGroup: (group) => set({ selectedGroup: group }),
+  setSelectedGroup: (group) => {
+    const current = get().selectedGroup;
+    if (current?._id === group?._id) return;
+
+    set({ selectedGroup: group });
+
+    if (group !== null) {
+      useChatStore.getState().setSelectedUser(null);
+    }
+  },
 
   getAllGroups: async () => {
     set({ isGroupsLoading: true });
@@ -33,5 +42,16 @@ export const useGroupStore = create((set, get) => ({
         message: error?.response?.data?.message || "Something went wrong",
       };
     }
+  },
+
+  resetGroup: () =>
+    set({
+      selectedGroup: null,
+      allGroups: [],
+      activeTab: "chats",
+    }),
+
+  joinGroup: (groupId) => {
+    alert(`Join group ${groupId}`);
   },
 }));

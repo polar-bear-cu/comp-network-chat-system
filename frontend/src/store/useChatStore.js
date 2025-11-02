@@ -1,6 +1,7 @@
 import axiosInstance from "@/lib/axios";
 import { create } from "zustand";
 import { useAuthStore } from "./useAuthStore";
+import { useGroupStore } from "./useGroupStore";
 
 export const useChatStore = create((set, get) => ({
   allContacts: [],
@@ -12,7 +13,16 @@ export const useChatStore = create((set, get) => ({
   isMessagesLoading: false,
 
   setActiveTab: (tab) => set({ activeTab: tab }),
-  setSelectedUser: (selectedUser) => set({ selectedUser }),
+  setSelectedUser: (selectedUser) => {
+    const current = get().selectedUser;
+    if (current?._id === selectedUser?._id) return;
+
+    set({ selectedUser });
+
+    if (selectedUser !== null) {
+      useGroupStore.getState().setSelectedGroup(null);
+    }
+  },
 
   getAllContacts: async () => {
     set({ isUsersLoading: true });

@@ -2,6 +2,7 @@ import axiosInstance from "@/lib/axios";
 import { create } from "zustand";
 import { useChatStore } from "./useChatStore";
 import { io } from "socket.io-client";
+import { useGroupStore } from "./useGroupStore";
 
 const BASE_URL =
   import.meta.env.MODE === "production"
@@ -65,6 +66,7 @@ export const useAuthStore = create((set, get) => ({
     set({ isLoggingOut: true });
 
     useChatStore.getState().resetChat?.();
+    useGroupStore.getState().resetGroup?.();
 
     try {
       await axiosInstance.post("/auth/logout");
