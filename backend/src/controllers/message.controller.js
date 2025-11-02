@@ -1,5 +1,6 @@
 import User from "../model/user.model.js";
 import Message from "../model/message.model.js";
+import { getReceiverSocketId, socketServer } from "../lib/socket.js";
 
 export async function getAllContacts(req, res) {
   try {
@@ -48,6 +49,11 @@ export async function sendMessage(req, res) {
     });
 
     await newMessage.save();
+
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    if (receiverSocketId) {
+      socketServer.to(receiverSocketId).emit("newMessage", newMessage);
+    }
 
     res.status(201).json(newMessage);
   } catch (error) {
