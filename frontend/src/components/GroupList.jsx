@@ -14,12 +14,15 @@ const GroupList = () => {
 
   if (isGroupsLoading) return <UsersLoadingSkeleton />;
 
-  if (!Array.isArray(allGroups) || allGroups.length === 0)
-    return <NoGroupFound />;
+  const validGroups = allGroups.filter(
+    (group) => group && group._id && group.name && group.owner
+  );
+
+  if (validGroups.length === 0) return <NoGroupFound />;
 
   return (
     <>
-      {[...allGroups].reverse().map((group) => (
+      {[...validGroups].reverse().map((group) => (
         <div
           key={group._id}
           className="p-4 rounded-lg cursor-pointer bg-muted/30 border border-border hover:bg-muted/50 transition-colors"

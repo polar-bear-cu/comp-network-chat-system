@@ -17,7 +17,6 @@ const NotMemberPlaceholder = () => {
     const res = await joinGroup(selectedGroup._id);
 
     if (res.success) {
-      await getAllGroups();
       setSelectedGroup(res.group);
     } else {
       setErrorText(res.message);

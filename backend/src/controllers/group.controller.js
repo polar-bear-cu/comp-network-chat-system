@@ -52,6 +52,9 @@ export async function createGroup(req, res) {
       members: [loggedInUserId],
     });
 
+    await newGroup.populate("owner", "username");
+    await newGroup.populate("members", "username");
+
     res.status(201).json(newGroup);
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });

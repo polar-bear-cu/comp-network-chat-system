@@ -18,6 +18,7 @@ export const useGroupStore = create((set, get) => ({
     if (!socket) return;
 
     socket.on("groupMemberJoined", ({ group, newMember }) => {
+      console.log("groupMemberJoined event received:", { group, newMember });
       const { allGroups, selectedGroup } = get();
       const updatedGroups = allGroups.map((g) =>
         g._id === group._id ? group : g
@@ -63,6 +64,9 @@ export const useGroupStore = create((set, get) => ({
   createGroup: async (name) => {
     try {
       const res = await axiosInstance.post("/groups", { name });
+
+      const { allGroups } = get();
+      set({ allGroups: [...allGroups, res.data] });
       return { success: true, group: res.data };
     } catch (error) {
       return {
@@ -82,6 +86,13 @@ export const useGroupStore = create((set, get) => ({
   joinGroup: async (groupId) => {
     try {
       const res = await axiosInstance.post(`/groups/${groupId}/join`);
+
+      const { allGroups } = get();
+      const updatedGroup = allGroups.map((g) => {
+        g._id === groupId ? res.data : g;
+      });
+
+      set({ allGroups: updatedGroup });
 
       const socket = useAuthStore.getState().socket;
       if (socket) {

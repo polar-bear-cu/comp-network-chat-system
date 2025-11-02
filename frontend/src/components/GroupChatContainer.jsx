@@ -16,17 +16,19 @@ const GroupChatContainer = () => {
 
   if (!selectedGroup) return null;
 
+  const isMember = selectedGroup.members?.some((m) => m._id === authUser?._id);
+
   useEffect(() => {
-    if (selectedGroup?._id) {
+    if (selectedGroup?._id && isMember) {
       getMessagesByGroupId(selectedGroup._id);
     }
-  }, [selectedGroup, getMessagesByGroupId]);
+  }, [selectedGroup, isMember, getMessagesByGroupId]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const isMember = selectedGroup.members?.some((m) => m._id === authUser?._id);
+    if (isMember) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isMember]);
 
   return (
     <div className="flex flex-col h-full">
