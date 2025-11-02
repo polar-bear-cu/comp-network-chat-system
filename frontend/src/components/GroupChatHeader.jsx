@@ -74,7 +74,7 @@ const GroupChatHeader = () => {
                   </div>
                   <p className="text-sm">
                     {member.username}
-                    {member._id === selectedGroup.ownerId && " (Owner)"}
+                    {member._id === selectedGroup.owner._id && " (Owner)"}
                     {member._id === authUser._id && " (Me)"}
                   </p>
                 </div>
