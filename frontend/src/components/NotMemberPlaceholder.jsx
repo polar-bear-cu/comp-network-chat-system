@@ -22,6 +22,8 @@ const NotMemberPlaceholder = () => {
       setErrorText(res.message);
     }
 
+    console.log("test");
+
     setLoading(false);
   };
 
