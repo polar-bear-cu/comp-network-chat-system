@@ -1,3 +1,4 @@
+import { socketServer } from "../lib/socket.js";
 import Group from "../model/group.model.js";
 
 export async function getAllGroups(req, res) {
@@ -53,6 +54,8 @@ export async function createGroup(req, res) {
 
     await newGroup.populate("owner", "username");
     await newGroup.populate("members", "username");
+
+    socketServer.emit("newGroup", newGroup);
 
     res.status(201).json(newGroup);
   } catch (error) {

@@ -1,6 +1,7 @@
 import axiosInstance from "@/lib/axios";
 import { create } from "zustand";
 import { useChatStore } from "./useChatStore";
+import { useAuthStore } from "./useAuthStore";
 
 export const useGroupStore = create((set, get) => ({
   allGroups: [],
@@ -37,7 +38,6 @@ export const useGroupStore = create((set, get) => ({
   createGroup: async (name) => {
     try {
       const res = await axiosInstance.post("/groups", { name });
-      await get().getAllGroups();
       return { success: true, group: res.data };
     } catch (error) {
       return {
@@ -94,5 +94,27 @@ export const useGroupStore = create((set, get) => ({
     } catch (error) {
       throw error;
     }
+  },
+
+  subscribeToGroupEvents: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    socket.on("newGroup", (newGroup) => {
+      const currentGroups = get().allGroups;
+
+      const groupExists = currentGroups.some((g) => g._id === newGroup._id);
+
+      if (!groupExists) {
+        set({ allGroups: [newGroup, ...currentGroups] });
+      }
+    });
+  },
+
+  unsubscribeFromGroupEvents: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    socket.off("newGroup");
   },
 }));
