@@ -7,30 +7,47 @@ import NoConversationPlaceholder from "@/components/NoConversationPlaceholder";
 import ProfileHeader from "@/components/ProfileHeader";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChatStore } from "@/store/useChatStore";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import PageLoader from "./PageLoader";
 
 const ChatPage = () => {
-  const { logout } = useAuthStore();
+  const navigate = useNavigate();
+  const { authUser, isCheckingAuth, checkAuth } = useAuthStore();
   const { activeTab, selectedUser } = useChatStore();
 
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (!authUser) navigate("/login");
+  }, [authUser, navigate]);
+
+  if (isCheckingAuth) return <PageLoader />;
+
   return (
-    <div className="relative w-full max-w-6xl h-[800px]">
-      <BorderAnimatedContainer>
-        {/* LEFT SIDE */}
-        <div className="w-80 bg-slate-800/50 backdrop-blur-sm flex flex-col">
-          <ProfileHeader />
-          <ActiveTabSwitch />
+    <div className="min-h-screen w-full bg-linear-to-br from-primary to-secondary flex justify-center items-center">
+      <div className="relative w-full max-w-7xl h-[90vh] rounded-2xl shadow-2xl overflow-hidden">
+        <BorderAnimatedContainer>
+          {/* Left Panel */}
+          <div className="w-80 bg-sidebar/50 backdrop-blur-sm flex flex-col">
+            <ProfileHeader />
+            <ActiveTabSwitch />
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            {activeTab === "chats" ? <ChatsList /> : <ContactList />}
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {activeTab === "chats" ? <ChatsList /> : <ContactList />}
+            </div>
           </div>
-        </div>
 
-        {/* RIGHT SIDE */}
-        <div className="flex-1 flex flex-col bg-slate-900/50 backdrop-blur-sm">
-          {selectedUser ? <ChatContainer /> : <NoConversationPlaceholder />}
-        </div>
-      </BorderAnimatedContainer>
+          {/* Right Panel */}
+          <div className="flex-1 flex flex-col bg-card/50 backdrop-blur-sm">
+            {selectedUser ? <ChatContainer /> : <NoConversationPlaceholder />}
+          </div>
+        </BorderAnimatedContainer>
+      </div>
     </div>
   );
 };
+
 export default ChatPage;
