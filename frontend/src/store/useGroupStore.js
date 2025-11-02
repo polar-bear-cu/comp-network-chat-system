@@ -109,6 +109,19 @@ export const useGroupStore = create((set, get) => ({
         set({ allGroups: [...currentGroups, newGroup] });
       }
     });
+
+    socket.on("groupUpdated", (updatedGroup) => {
+      const currentGroups = get().allGroups;
+      const updatedGroups = currentGroups.map((g) =>
+        g._id === updatedGroup._id ? updatedGroup : g
+      );
+      set({ allGroups: updatedGroups });
+
+      const selectedGroup = get().selectedGroup;
+      if (selectedGroup && selectedGroup._id === updatedGroup._id) {
+        set({ selectedGroup: updatedGroup });
+      }
+    });
   },
 
   unsubscribeFromGroupEvents: () => {
@@ -116,5 +129,6 @@ export const useGroupStore = create((set, get) => ({
     if (!socket) return;
 
     socket.off("newGroup");
+    socket.off("groupUpdated");
   },
 }));

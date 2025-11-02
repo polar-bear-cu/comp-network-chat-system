@@ -92,6 +92,8 @@ export async function joinGroup(req, res) {
       .populate("owner", "username")
       .populate("members", "username");
 
+    socketServer.emit("groupUpdated", updatedGroup);
+
     res.status(200).json(updatedGroup);
   } catch (error) {
     console.error(error);
