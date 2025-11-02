@@ -2,14 +2,20 @@ import { useState } from "react";
 import { Send } from "lucide-react";
 import { Button } from "./ui/button";
 import { useChatStore } from "@/store/useChatStore";
+import { useGroupStore } from "@/store/useGroupStore";
 
 function MessageInput() {
-  const { sendMessage } = useChatStore();
+  const { sendMessage, selectedUser } = useChatStore();
+  const { sendGroupMessage, selectedGroup } = useGroupStore();
   const [text, setText] = useState("");
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    sendMessage(text);
+    if (selectedUser) {
+      sendMessage(text);
+    } else if (selectedGroup) {
+      sendGroupMessage(text);
+    }
     setText("");
   };
 

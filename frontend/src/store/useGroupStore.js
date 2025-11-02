@@ -4,6 +4,8 @@ import { useChatStore } from "./useChatStore";
 
 export const useGroupStore = create((set, get) => ({
   allGroups: [],
+  messages: [],
+  isMessagesLoading: false,
   selectedGroup: null,
   isGroupsLoading: false,
   openCreateGroupPopup: false,
@@ -51,7 +53,45 @@ export const useGroupStore = create((set, get) => ({
       activeTab: "chats",
     }),
 
-  joinGroup: (groupId) => {
-    alert(`Join group ${groupId}`);
+  joinGroup: async (groupId) => {
+    try {
+      const res = await axiosInstance.post(`/groups/${groupId}/join`);
+      await get().getAllGroups();
+
+      return { success: true, group: res.data };
+    } catch (error) {
+      console.error(error);
+      return {
+        success: false,
+        message: error?.response?.data?.message || "Failed to join group",
+      };
+    }
+  },
+
+  getMessagesByGroupId: async (groupId) => {
+    set({ isMessagesLoading: true });
+    try {
+      const res = await axiosInstance.get(`/groups/${groupId}/messages`);
+      set({ messages: res.data });
+    } catch (error) {
+      throw error;
+    } finally {
+      set({ isMessagesLoading: false });
+    }
+  },
+
+  sendGroupMessage: async (text) => {
+    try {
+      const { selectedGroup, messages } = get();
+      const res = await axiosInstance.post(
+        `/groups/${selectedGroup._id}/send`,
+        {
+          text,
+        }
+      );
+      set({ messages: messages.concat(res.data) });
+    } catch (error) {
+      throw error;
+    }
   },
 }));

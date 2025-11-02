@@ -9,9 +9,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const GroupChatHeader = () => {
   const { selectedGroup, setSelectedGroup } = useGroupStore();
+  const { authUser } = useAuthStore();
 
   if (!selectedGroup) return null;
 
@@ -65,7 +67,10 @@ const GroupChatHeader = () => {
                   <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-bold text-accent-foreground">
                     {member.username[0].toUpperCase()}
                   </div>
-                  <p className="text-sm">{member.username}</p>
+                  <p className="text-sm">
+                    {member.username}{" "}
+                    {member._id === authUser._id ? "(Me)" : ""}
+                  </p>
                 </div>
               ))}
             </div>

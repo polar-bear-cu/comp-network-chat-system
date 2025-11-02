@@ -1,5 +1,4 @@
 import Group from "../model/group.model.js";
-import { socketServer } from "../lib/socket.js";
 
 export async function getAllGroups(req, res) {
   try {
@@ -54,7 +53,42 @@ export async function createGroup(req, res) {
 
     res.status(201).json(newGroup);
   } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export async function joinGroup(req, res) {
+  try {
+    const loggedInUserId = req.user._id;
+    const groupId = req.params.id;
+
+    if (!groupId) {
+      res.status(400).json({ message: "No group id" });
+    }
+
+    const group = await Group.findById(groupId);
+
+    if (!group) {
+      res.status(400).json({ message: "Invalid group id" });
+    }
+
+    if (group.members.includes(loggedInUserId)) {
+      res.status(400).json({ message: "Already in the group" });
+    }
+
+    await Group.findByIdAndUpdate(
+      groupId,
+      { $addToSet: { members: loggedInUserId } },
+      { new: true }
+    );
+
+    const updatedGroup = await Group.findById(groupId)
+      .populate("owner", "username")
+      .populate("members", "username");
+
+    res.status(200).json(updatedGroup);
+  } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 }
