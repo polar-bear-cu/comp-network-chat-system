@@ -1,3 +1,4 @@
+import { socketServer } from "../lib/socket.js";
 import Group from "../model/group.model.js";
 
 export async function getAllGroups(req, res) {
@@ -85,6 +86,14 @@ export async function joinGroup(req, res) {
     const updatedGroup = await Group.findById(groupId)
       .populate("owner", "username")
       .populate("members", "username");
+
+    socketServer.to(`group:${groupId}`).emit("groupMemberJoined", {
+      group: updatedGroup,
+      newMember: {
+        _id: req.user._id,
+        username: req.user.username,
+      },
+    });
 
     res.status(200).json(updatedGroup);
   } catch (error) {

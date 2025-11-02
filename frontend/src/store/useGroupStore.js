@@ -1,6 +1,7 @@
 import axiosInstance from "@/lib/axios";
 import { create } from "zustand";
 import { useChatStore } from "./useChatStore";
+import { useAuthStore } from "./useAuthStore";
 
 export const useGroupStore = create((set, get) => ({
   allGroups: [],
@@ -11,6 +12,31 @@ export const useGroupStore = create((set, get) => ({
   openCreateGroupPopup: false,
 
   setOpenCreateGroupPopup: (open) => set({ openCreateGroupPopup: open }),
+
+  subscribeToGroupEvents: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    socket.on("groupMemberJoined", ({ group, newMember }) => {
+      const { allGroups, selectedGroup } = get();
+      const updatedGroups = allGroups.map((g) =>
+        g._id === group._id ? group : g
+      );
+
+      if (selectedGroup?._id === group._id) {
+        set({ selectedGroup: group });
+      }
+
+      set({ allGroups: updatedGroups });
+    });
+  },
+
+  unsubscribeFromGroupEvents: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+    socket.off("groupMemberJoined");
+  },
+
   setSelectedGroup: (group) => {
     const current = get().selectedGroup;
     if (current?._id === group?._id) return;
@@ -56,7 +82,11 @@ export const useGroupStore = create((set, get) => ({
   joinGroup: async (groupId) => {
     try {
       const res = await axiosInstance.post(`/groups/${groupId}/join`);
-      await get().getAllGroups();
+
+      const socket = useAuthStore.getState().socket;
+      if (socket) {
+        socket.emit("joinGroupRoom", groupId);
+      }
 
       return { success: true, group: res.data };
     } catch (error) {

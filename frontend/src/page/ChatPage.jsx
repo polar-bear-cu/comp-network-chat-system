@@ -19,7 +19,12 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const { authUser, isCheckingAuth, checkAuth } = useAuthStore();
   const { activeTab, selectedUser } = useChatStore();
-  const { openCreateGroupPopup, selectedGroup } = useGroupStore();
+  const {
+    openCreateGroupPopup,
+    selectedGroup,
+    subscribeToGroupEvents,
+    unsubscribeFromGroupEvents,
+  } = useGroupStore();
 
   useEffect(() => {
     checkAuth();
@@ -28,6 +33,13 @@ const ChatPage = () => {
   useEffect(() => {
     if (!authUser) navigate("/login");
   }, [authUser, navigate]);
+
+  useEffect(() => {
+    if (authUser) {
+      subscribeToGroupEvents();
+      return () => unsubscribeFromGroupEvents();
+    }
+  }, [authUser]);
 
   if (isCheckingAuth) return <PageLoader />;
 
