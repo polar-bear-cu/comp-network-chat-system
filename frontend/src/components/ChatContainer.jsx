@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChatStore } from "@/store/useChatStore";
 import MessagesLoadingSkeleton from "./MessagesLoadingSkeleton";
@@ -10,10 +10,41 @@ const ChatContainer = () => {
   const { selectedUser, getMessagesByUserId, messages, isMessagesLoading } =
     useChatStore();
   const { authUser } = useAuthStore();
+  const bottomRef = useRef(null);
+
+  const formatMessageTime = (dateString) => {
+    const date = new Date(dateString);
+    const today = new Date();
+
+    const isToday =
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
+
+    if (isToday) {
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+
+    return (
+      date.toLocaleDateString("en-GB") +
+      " " +
+      date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    );
+  };
 
   useEffect(() => {
     if (selectedUser?._id) getMessagesByUserId(selectedUser._id);
   }, [selectedUser, getMessagesByUserId]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   return (
     <>
@@ -36,13 +67,15 @@ const ChatContainer = () => {
                     }`}
                   >
                     {msg.text && <p>{msg.text}</p>}
-                    <p className="text-xs mt-1 opacity-70 text-muted-foreground">
-                      {new Date(msg.createdAt).toISOString().slice(11, 16)}
+                    <p className="text-xs mt-1 opacity-70 text-foreground">
+                      {formatMessageTime(msg.createdAt)}
                     </p>
                   </div>
                 </div>
               );
             })}
+
+            <div ref={bottomRef} />
           </div>
         ) : isMessagesLoading ? (
           <MessagesLoadingSkeleton />

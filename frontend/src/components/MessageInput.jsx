@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Send } from "lucide-react";
 import { Button } from "./ui/button";
+import { useChatStore } from "@/store/useChatStore";
 
 function MessageInput() {
+  const { sendMessage } = useChatStore();
   const [text, setText] = useState("");
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    alert(`Send Message: ${text}`);
+    sendMessage(text);
     setText("");
   };
 

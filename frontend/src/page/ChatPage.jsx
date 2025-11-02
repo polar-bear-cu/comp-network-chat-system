@@ -42,7 +42,11 @@ const ChatPage = () => {
 
           {/* Right Panel */}
           <div className="flex-1 flex flex-col bg-card/50 backdrop-blur-sm">
-            {selectedUser ? <ChatContainer /> : <NoConversationPlaceholder />}
+            {authUser && selectedUser ? (
+              <ChatContainer />
+            ) : (
+              <NoConversationPlaceholder />
+            )}
           </div>
         </BorderAnimatedContainer>
       </div>

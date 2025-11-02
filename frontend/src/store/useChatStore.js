@@ -47,4 +47,26 @@ export const useChatStore = create((set, get) => ({
       set({ isMessagesLoading: false });
     }
   },
+
+  sendMessage: async (text) => {
+    try {
+      const { selectedUser, messages } = get();
+      const res = await axiosInstance.post(
+        `/messages/send/${selectedUser._id}`,
+        {
+          text,
+        }
+      );
+      set({ messages: messages.concat(res.data) });
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  resetChat: () =>
+    set({
+      selectedUser: null,
+      messages: [],
+      activeTab: "chats",
+    }),
 }));

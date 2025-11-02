@@ -1,5 +1,6 @@
 import axiosInstance from "@/lib/axios";
 import { create } from "zustand";
+import { useChatStore } from "./useChatStore";
 
 export const useAuthStore = create((set) => ({
   authUser: null,
@@ -51,6 +52,9 @@ export const useAuthStore = create((set) => ({
 
   logout: async () => {
     set({ isLoggingOut: true });
+
+    useChatStore.getState().resetChat?.();
+
     try {
       await axiosInstance.post("/auth/logout");
       set({ authUser: null });

@@ -16,7 +16,7 @@ export async function getAllContacts(req, res) {
 export async function getMessagesByUserId(req, res) {
   try {
     const loggedInUserId = req.user._id;
-    const otherUserId = req.params;
+    const otherUserId = req.params.id;
 
     const messages = await Message.find({
       $or: [
@@ -30,6 +30,7 @@ export async function getMessagesByUserId(req, res) {
 
     res.status(200).json(messages);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -37,7 +38,7 @@ export async function getMessagesByUserId(req, res) {
 export async function sendMessage(req, res) {
   try {
     const { text } = req.body;
-    const receiverId = req.params;
+    const receiverId = req.params.id;
     const senderId = req.user._id;
 
     const newMessage = new Message({
@@ -50,6 +51,7 @@ export async function sendMessage(req, res) {
 
     res.status(201).json(newMessage);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
