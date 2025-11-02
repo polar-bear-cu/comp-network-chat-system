@@ -38,7 +38,7 @@ const ChatPage = () => {
     if (authUser) {
       subscribeToGroups();
     }
-    return () => unsubscribeFromGroupEvents();
+    return () => unsubscribeFromGroups();
   }, [authUser, subscribeToGroups, unsubscribeFromGroups]);
 
   if (isCheckingAuth) return <PageLoader />;
