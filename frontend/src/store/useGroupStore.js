@@ -88,11 +88,11 @@ export const useGroupStore = create((set, get) => ({
       const res = await axiosInstance.post(`/groups/${groupId}/join`);
 
       const { allGroups } = get();
-      const updatedGroup = allGroups.map((g) => {
-        g._id === groupId ? res.data : g;
-      });
+      const updatedGroups = allGroups.map((g) =>
+        g._id === groupId ? res.data : g
+      );
 
-      set({ allGroups: updatedGroup });
+      set({ allGroups: updatedGroups });
 
       const socket = useAuthStore.getState().socket;
       if (socket) {
