@@ -3,7 +3,7 @@ import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGroupStore } from "@/store/useGroupStore";
 
-const NotMemberPlaceHolder = () => {
+const NotMemberPlaceholder = () => {
   const { selectedGroup, joinGroup, getAllGroups, setSelectedGroup } =
     useGroupStore();
   const [loading, setLoading] = useState(false);
@@ -54,4 +54,4 @@ const NotMemberPlaceHolder = () => {
   );
 };
 
-export default NotMemberPlaceHolder;
+export default NotMemberPlaceholder;

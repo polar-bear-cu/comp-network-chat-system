@@ -2,10 +2,10 @@ import { useEffect, useRef } from "react";
 import MessageInput from "./MessageInput";
 import { useGroupStore } from "@/store/useGroupStore";
 import { useAuthStore } from "@/store/useAuthStore";
-import NotMemberPlaceHolder from "./NotMemberPlaceHolder";
+import NotMemberPlaceholder from "./NotMemberPlaceholder";
 import GroupChatHeader from "./GroupChatHeader";
 import MessagesLoadingSkeleton from "./MessagesLoadingSkeleton";
-import NoGroupChatHistoryPlaceholder from "./NoGroupChatHistoryPlaceHolder";
+import NoGroupChatHistoryPlaceholder from "./NoGroupChatHistoryPlaceholder";
 import { formatMessageTime } from "@/lib/utils";
 
 const GroupChatContainer = () => {
@@ -34,7 +34,7 @@ const GroupChatContainer = () => {
 
       <div className="flex-1 px-6 overflow-y-auto py-8 bg-transparent">
         {!isMember ? (
-          <NotMemberPlaceHolder />
+          <NotMemberPlaceholder />
         ) : isMessagesLoading ? (
           <MessagesLoadingSkeleton />
         ) : messages.length > 0 ? (
