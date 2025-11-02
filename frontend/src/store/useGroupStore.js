@@ -106,7 +106,7 @@ export const useGroupStore = create((set, get) => ({
       const groupExists = currentGroups.some((g) => g._id === newGroup._id);
 
       if (!groupExists) {
-        set({ allGroups: [newGroup, ...currentGroups] });
+        set({ allGroups: [...currentGroups, newGroup] });
       }
     });
   },
