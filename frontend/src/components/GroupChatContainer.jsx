@@ -5,7 +5,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import NotMemberPlaceholder from "./NotMemberPlaceholder";
 import GroupChatHeader from "./GroupChatHeader";
 import MessagesLoadingSkeleton from "./MessagesLoadingSkeleton";
-import NoGroupChatHistoryPlaceholder from "./NoGroupChatHistoryPlaceholder";
+import NoGroupChatHistoryPlaceholder from "./NoGroupChatHistoryPlaceHolder";
 import { formatMessageTime } from "@/lib/utils";
 
 const GroupChatContainer = () => {
