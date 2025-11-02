@@ -96,7 +96,7 @@ export const useGroupStore = create((set, get) => ({
     }
   },
 
-  subscribeToGroupEvents: () => {
+  subscribeToGroups: () => {
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
 
@@ -124,11 +124,35 @@ export const useGroupStore = create((set, get) => ({
     });
   },
 
-  unsubscribeFromGroupEvents: () => {
+  unsubscribeFromGroups: () => {
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
 
     socket.off("newGroup");
     socket.off("groupUpdated");
+  },
+
+  subscribeToGroupMessages: () => {
+    const { selectedGroup } = get();
+    if (!selectedGroup) return;
+
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    socket.on("newGroupMessage", (newMessage) => {
+      const isMessageForCurrentGroup = newMessage.groupId === selectedGroup._id;
+
+      if (!isMessageForCurrentGroup) return;
+
+      const currentMessages = get().messages;
+      set({ messages: [...currentMessages, newMessage] });
+    });
+  },
+
+  unsubscribeFromGroupMessages: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    socket.off("newGroupMessage");
   },
 }));

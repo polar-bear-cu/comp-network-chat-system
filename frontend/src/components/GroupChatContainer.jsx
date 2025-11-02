@@ -9,8 +9,14 @@ import NoGroupChatHistoryPlaceholder from "./NoGroupChatHistoryPlaceHolder";
 import { formatMessageTime } from "@/lib/utils";
 
 const GroupChatContainer = () => {
-  const { selectedGroup, messages, isMessagesLoading, getMessagesByGroupId } =
-    useGroupStore();
+  const {
+    selectedGroup,
+    messages,
+    isMessagesLoading,
+    getMessagesByGroupId,
+    subscribeToGroupMessages,
+    unsubscribeFromGroupMessages,
+  } = useGroupStore();
   const { authUser } = useAuthStore();
   const bottomRef = useRef(null);
 
@@ -19,8 +25,16 @@ const GroupChatContainer = () => {
   useEffect(() => {
     if (selectedGroup?._id) {
       getMessagesByGroupId(selectedGroup._id);
+      subscribeToGroupMessages();
     }
-  }, [selectedGroup, getMessagesByGroupId]);
+
+    return () => unsubscribeFromGroupMessages();
+  }, [
+    selectedGroup,
+    getMessagesByGroupId,
+    subscribeToGroupMessages,
+    unsubscribeFromGroupMessages,
+  ]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
