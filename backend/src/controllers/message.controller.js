@@ -1,4 +1,5 @@
 import User from "../model/user.model.js";
+import Message from "../model/message.model.js";
 
 export async function getAllContacts(req, res) {
   try {
@@ -8,6 +9,48 @@ export async function getAllContacts(req, res) {
     }).select("-password");
     res.status(200).json(filteredUsers);
   } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+export async function getMessagesByUserId(req, res) {
+  try {
+    const loggedInUserId = req.user._id;
+    const otherUserId = req.params;
+
+    const messages = await Message.find({
+      $or: [
+        {
+          senderId: loggedInUserId,
+          receiverId: otherUserId,
+        },
+        { senderId: otherUserId, receiverId: loggedInUserId },
+      ],
+    });
+
+    res.status(200).json(messages);
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+export async function sendMessage(req, res) {
+  try {
+    const { text } = req.body;
+    const receiverId = req.params;
+    const senderId = req.user._id;
+
+    const newMessage = new Message({
+      senderId,
+      receiverId,
+      text,
+    });
+
+    await newMessage.save();
+
+    res.status(201).json(newMessage);
+  } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
