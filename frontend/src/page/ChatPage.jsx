@@ -22,8 +22,8 @@ const ChatPage = () => {
   const {
     openCreateGroupPopup,
     selectedGroup,
-    subscribeToGroupEvents,
-    unsubscribeFromGroupEvents,
+    subscribeToGroups,
+    unsubscribeFromGroups,
   } = useGroupStore();
 
   useEffect(() => {
@@ -36,10 +36,10 @@ const ChatPage = () => {
 
   useEffect(() => {
     if (authUser) {
-      subscribeToGroupEvents();
+      subscribeToGroups();
     }
     return () => unsubscribeFromGroupEvents();
-  }, [authUser, subscribeToGroupEvents, unsubscribeFromGroupEvents]);
+  }, [authUser, subscribeToGroups, unsubscribeFromGroups]);
 
   if (isCheckingAuth) return <PageLoader />;
 

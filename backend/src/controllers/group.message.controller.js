@@ -1,3 +1,4 @@
+import { socketServer } from "../lib/socket.js";
 import GroupMessage from "../model/group.message.model.js";
 
 export async function getMessagesByGroupId(req, res) {
@@ -35,8 +36,12 @@ export async function sendGroupMessage(req, res) {
     });
 
     await newMessage.save();
-
     await newMessage.populate("sender", "username");
+
+    socketServer.emit("newGroupMessage", {
+      ...newMessage.toObject(),
+      groupId,
+    });
 
     res.status(201).json(newMessage);
   } catch (error) {
