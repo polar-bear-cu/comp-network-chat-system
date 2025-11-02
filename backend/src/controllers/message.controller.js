@@ -50,6 +50,36 @@ export async function sendMessage(req, res) {
 
     res.status(201).json(newMessage);
   } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+export async function getChatPartners(req, res) {
+  try {
+    const loggedInUserId = req.user._id;
+    const messages = await Message.find({
+      $or: [
+        {
+          senderId: loggedInUserId,
+        },
+        { receiverId: loggedInUserId },
+      ],
+    });
+    const chatPartnersId = [
+      ...new Set(
+        messages.map((msg) =>
+          msg.senderId.toString() === loggedInUserId.toString()
+            ? msg.receiverId.toString()
+            : msg.senderId.toString()
+        )
+      ),
+    ];
+    const chatPartners = await User.find({
+      _id: { $in: chatPartnersId },
+    }).select("-password");
+
+    res.status(200).json(chatPartners);
+  } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
