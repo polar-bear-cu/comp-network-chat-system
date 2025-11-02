@@ -13,6 +13,7 @@ const socketServer = new Server(server, {
 socketServer.use(socketAuthMiddleware);
 
 const userSocketMap = {};
+const groupRooms = new Map();
 
 export function getReceiverSocketId(userId) {
   return userSocketMap[userId];
@@ -22,10 +23,21 @@ socketServer.on("connection", (socket) => {
   const userId = socket.userId;
   userSocketMap[userId] = socket.id;
 
+  socket.on("joinGroupRoom", (groupId) => {
+    socket.join(`group:${groupId}`);
+    if (!groupRooms.has(groupId)) {
+      groupRooms.set(groupId, new Set());
+    }
+    groupRooms.get(groupId).add(userId);
+  });
+
   socketServer.emit("getOnlineUsers", Object.keys(userSocketMap));
 
   socket.on("disconnect", () => {
     delete userSocketMap[userId];
+    groupRooms.forEach((members, groupId) => {
+      members.delete(userId);
+    });
     socketServer.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });
