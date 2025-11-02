@@ -1,19 +1,26 @@
 import axiosInstance from "@/lib/axios";
 import { create } from "zustand";
 import { useChatStore } from "./useChatStore";
+import { io } from "socket.io-client";
 
-export const useAuthStore = create((set) => ({
+const BASE_URL =
+  import.meta.env.MODE === "production" ? "http://localhost:3000" : "/";
+
+export const useAuthStore = create((set, get) => ({
   authUser: null,
   isCheckingAuth: true,
   isSigningUp: false,
   isLoggingIn: false,
   isLoggingOut: false,
+  socket: null,
+  onlineUsers: [],
 
   checkAuth: async () => {
     try {
       const res = await axiosInstance.get("/auth/check");
       set({ authUser: res.data });
-    } catch (error) {
+      get().connectSocket();
+    } catch {
       set({ authUser: null });
     } finally {
       set({ isCheckingAuth: false });
@@ -28,6 +35,7 @@ export const useAuthStore = create((set) => ({
         password,
       });
       set({ authUser: res.data });
+      get().connectSocket();
     } catch (err) {
       throw err;
     } finally {
@@ -43,6 +51,7 @@ export const useAuthStore = create((set) => ({
         password,
       });
       set({ authUser: res.data });
+      get().connectSocket();
     } catch (err) {
       throw err;
     } finally {
@@ -57,11 +66,29 @@ export const useAuthStore = create((set) => ({
 
     try {
       await axiosInstance.post("/auth/logout");
+      get().disconnectSocket();
       set({ authUser: null });
     } catch (err) {
       throw err;
     } finally {
       set({ isLoggingOut: false });
     }
+  },
+
+  connectSocket: () => {
+    const { authUser, socket } = get();
+    if (!authUser || socket?.connected) return;
+
+    const newSocket = io(BASE_URL, { withCredentials: true });
+    set({ socket: newSocket });
+
+    newSocket.on("connect", () => console.log("Socket connected"));
+    newSocket.on("getOnlineUsers", (userIds) => set({ onlineUsers: userIds }));
+  },
+
+  disconnectSocket: () => {
+    const socket = get().socket;
+    if (socket?.connected) socket.disconnect();
+    set({ socket: null, onlineUsers: [] });
   },
 }));
