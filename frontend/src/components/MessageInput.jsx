@@ -15,14 +15,10 @@ function MessageInput() {
   } = useGroupStore();
 
   const [text, setText] = useState("");
-  const typingTimeoutRef = useRef(null);
   const isTypingRef = useRef(false);
 
   useEffect(() => {
     return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
       if (isTypingRef.current) {
         if (selectedUser) emitStopTyping();
         if (selectedGroup) emitGroupStopTyping();
@@ -41,9 +37,6 @@ function MessageInput() {
         if (selectedGroup) emitGroupStopTyping();
         isTypingRef.current = false;
       }
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
       return;
     }
 
@@ -52,16 +45,6 @@ function MessageInput() {
       if (selectedGroup) emitGroupTyping();
       isTypingRef.current = true;
     }
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    typingTimeoutRef.current = setTimeout(() => {
-      if (selectedUser) emitStopTyping();
-      if (selectedGroup) emitGroupStopTyping();
-      isTypingRef.current = false;
-    }, 2000);
   };
 
   const handleSendMessage = (e) => {
@@ -72,10 +55,6 @@ function MessageInput() {
       if (selectedUser) emitStopTyping();
       if (selectedGroup) emitGroupStopTyping();
       isTypingRef.current = false;
-    }
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
     }
 
     if (selectedUser) {
