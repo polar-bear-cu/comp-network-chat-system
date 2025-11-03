@@ -1,16 +1,78 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { Button } from "./ui/button";
 import { useChatStore } from "@/store/useChatStore";
 import { useGroupStore } from "@/store/useGroupStore";
 
 function MessageInput() {
-  const { sendMessage, selectedUser } = useChatStore();
-  const { sendGroupMessage, selectedGroup } = useGroupStore();
+  const { sendMessage, selectedUser, emitTyping, emitStopTyping } =
+    useChatStore();
+  const {
+    sendGroupMessage,
+    selectedGroup,
+    emitGroupTyping,
+    emitGroupStopTyping,
+  } = useGroupStore();
+
   const [text, setText] = useState("");
+  const typingTimeoutRef = useRef(null);
+  const isTypingRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      if (isTypingRef.current) {
+        if (selectedUser) emitStopTyping();
+        if (selectedGroup) emitGroupStopTyping();
+      }
+    };
+  }, [selectedUser, selectedGroup, emitStopTyping, emitGroupStopTyping]);
+
+  const handleTextChange = (e) => {
+    const value = e.target.value;
+    setText(value);
+
+    if (!value.trim()) {
+      if (isTypingRef.current) {
+        if (selectedUser) emitStopTyping();
+        if (selectedGroup) emitGroupStopTyping();
+        isTypingRef.current = false;
+      }
+      return;
+    }
+
+    if (!isTypingRef.current) {
+      if (selectedUser) emitTyping();
+      if (selectedGroup) emitGroupTyping();
+      isTypingRef.current = true;
+    }
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      if (selectedUser) emitStopTyping();
+      if (selectedGroup) emitGroupStopTyping();
+    }, 2000);
+  };
 
   const handleSendMessage = (e) => {
     e.preventDefault();
+    if (!text.trim()) return;
+
+    if (isTypingRef.current) {
+      if (selectedUser) emitStopTyping();
+      if (selectedGroup) emitGroupStopTyping();
+      isTypingRef.current = false;
+    }
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
     if (selectedUser) {
       sendMessage(text);
     } else if (selectedGroup) {

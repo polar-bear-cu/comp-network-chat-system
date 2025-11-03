@@ -10,6 +10,7 @@ export const useGroupStore = create((set, get) => ({
   selectedGroup: null,
   isGroupsLoading: false,
   openCreateGroupPopup: false,
+  groupTypingUsers: {},
 
   setOpenCreateGroupPopup: (open) => set({ openCreateGroupPopup: open }),
   setSelectedGroup: (group) => {
@@ -99,6 +100,43 @@ export const useGroupStore = create((set, get) => ({
     }
   },
 
+  emitGroupTyping: () => {
+    const { selectedGroup } = get();
+    if (!selectedGroup) return;
+
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    socket.emit("groupTyping", { groupId: selectedGroup._id });
+  },
+
+  emitGroupStopTyping: () => {
+    const { selectedGroup } = get();
+    if (!selectedGroup) return;
+
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    socket.emit("groupStopTyping", { groupId: selectedGroup._id });
+  },
+
+  setGroupTypingUser: (groupId, userId, username, isTyping) => {
+    set((state) => {
+      const groupTyping = { ...state.groupTypingUsers };
+      if (!groupTyping[groupId]) {
+        groupTyping[groupId] = {};
+      }
+
+      if (isTyping) {
+        groupTyping[groupId][userId] = username;
+      } else {
+        delete groupTyping[groupId][userId];
+      }
+
+      return { groupTypingUsers: groupTyping };
+    });
+  },
+
   sendGroupMessage: async (text) => {
     try {
       const { selectedGroup, messages } = get();
@@ -165,6 +203,14 @@ export const useGroupStore = create((set, get) => ({
       const currentMessages = get().messages;
       set({ messages: [...currentMessages, newMessage] });
     });
+
+    socket.on("groupUserTyping", ({ groupId, userId, username }) => {
+      get().setGroupTypingUser(groupId, userId, username, true);
+    });
+
+    socket.on("groupUserStopTyping", ({ groupId, userId }) => {
+      get().setGroupTypingUser(groupId, userId, null, false);
+    });
   },
 
   unsubscribeFromGroupMessages: () => {
@@ -172,5 +218,7 @@ export const useGroupStore = create((set, get) => ({
     if (!socket) return;
 
     socket.off("newGroupMessage");
+    socket.off("groupUserTyping");
+    socket.off("groupUserStopTyping");
   },
 }));

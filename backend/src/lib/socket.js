@@ -24,6 +24,39 @@ socketServer.on("connection", (socket) => {
 
   socketServer.emit("getOnlineUsers", Object.keys(userSocketMap));
 
+  socket.on("typing", ({ receiverId }) => {
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    if (receiverSocketId) {
+      socketServer.to(receiverSocketId).emit("userTyping", {
+        senderId: userId,
+      });
+    }
+  });
+
+  socket.on("stopTyping", ({ receiverId }) => {
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    if (receiverSocketId) {
+      socketServer.to(receiverSocketId).emit("userStopTyping", {
+        senderId: userId,
+      });
+    }
+  });
+
+  socket.on("groupTyping", ({ groupId }) => {
+    socket.to(groupId).emit("groupUserTyping", {
+      groupId,
+      userId,
+      username: socket.user.username,
+    });
+  });
+
+  socket.on("groupStopTyping", ({ groupId }) => {
+    socket.to(groupId).emit("groupUserStopTyping", {
+      groupId,
+      userId,
+    });
+  });
+
   socket.on("disconnect", () => {
     delete userSocketMap[userId];
     socketServer.emit("getOnlineUsers", Object.keys(userSocketMap));

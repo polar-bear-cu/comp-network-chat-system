@@ -59,7 +59,7 @@ const ChatPage = () => {
       <div className="relative w-full max-w-7xl h-[90vh] rounded-2xl shadow-2xl overflow-hidden">
         <BorderAnimatedContainer>
           {/* Left Panel */}
-          <div className="w-100 bg-sidebar/50 backdrop-blur-sm flex flex-col">
+          <div className="w-100 bg-sidebar/50 backdrop-blur-sm flex flex-col border-r">
             <ProfileHeader />
             <ActiveTabSwitch />
 

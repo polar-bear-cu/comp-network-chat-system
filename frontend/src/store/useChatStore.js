@@ -11,6 +11,7 @@ export const useChatStore = create((set, get) => ({
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
+  typingUsers: {},
 
   setActiveTab: (tab) => set({ activeTab: tab }),
   setSelectedUser: (selectedUser) => {
@@ -59,6 +60,32 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+  emitTyping: () => {
+    const { selectedUser } = get();
+    if (!selectedUser) return;
+
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    socket.emit("typing", { receiverId: selectedUser._id });
+  },
+
+  emitStopTyping: () => {
+    const { selectedUser } = get();
+    if (!selectedUser) return;
+
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    socket.emit("stopTyping", { receiverId: selectedUser._id });
+  },
+
+  setTypingUser: (userId, isTyping) => {
+    set((state) => ({
+      typingUsers: { ...state.typingUsers, [userId]: isTyping },
+    }));
+  },
+
   sendMessage: async (text) => {
     try {
       const { selectedUser, messages } = get();
@@ -94,11 +121,21 @@ export const useChatStore = create((set, get) => ({
       const currentMessages = get().messages;
       set({ messages: [...currentMessages, newMessage] });
     });
+
+    socket.on("userTyping", ({ senderId }) => {
+      get().setTypingUser(senderId, true);
+    });
+
+    socket.on("userStopTyping", ({ senderId }) => {
+      get().setTypingUser(senderId, false);
+    });
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     socket.off("newMessage");
+    socket.off("userTyping");
+    socket.off("userStopTyping");
   },
 
   subscribeToUsers: () => {
