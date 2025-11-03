@@ -24,6 +24,8 @@ socketServer.on("connection", (socket) => {
 
   socketServer.emit("getOnlineUsers", Object.keys(userSocketMap));
 
+  socket.join(userId);
+
   socket.on("typing", ({ receiverId }) => {
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
@@ -40,6 +42,14 @@ socketServer.on("connection", (socket) => {
         senderId: userId,
       });
     }
+  });
+
+  socket.on("joinGroup", ({ groupId }) => {
+    socket.join(groupId);
+  });
+
+  socket.on("leaveGroup", ({ groupId }) => {
+    socket.leave(groupId);
   });
 
   socket.on("groupTyping", ({ groupId }) => {

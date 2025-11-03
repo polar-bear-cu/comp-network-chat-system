@@ -17,7 +17,22 @@ export const useGroupStore = create((set, get) => ({
     const current = get().selectedGroup;
     if (current?._id === group?._id) return;
 
+    if (current) {
+      const socket = useAuthStore.getState().socket;
+      if (socket) {
+        socket.emit("leaveGroup", { groupId: current._id });
+      }
+    }
+
     set({ selectedGroup: group });
+
+    if (group !== null) {
+      useChatStore.getState().setSelectedUser(null);
+      const socket = useAuthStore.getState().socket;
+      if (socket) {
+        socket.emit("joinGroup", { groupId: group._id });
+      }
+    }
 
     if (group !== null) {
       useChatStore.getState().setSelectedUser(null);
