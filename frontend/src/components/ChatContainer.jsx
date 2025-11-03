@@ -6,6 +6,7 @@ import NoChatHistoryPlaceholder from "./NoChatHistoryPlaceholder";
 import MessageInput from "./MessageInput";
 import ChatHeader from "./ChatHeader";
 import { formatMessageTime } from "@/lib/utils";
+import TypingText from "./TypingText";
 
 const ChatContainer = () => {
   const {
@@ -15,6 +16,7 @@ const ChatContainer = () => {
     isMessagesLoading,
     subscribeToMessages,
     unsubscribeFromMessages,
+    typingUsers,
   } = useChatStore();
   const { authUser } = useAuthStore();
   const bottomRef = useRef(null);
@@ -36,6 +38,8 @@ const ChatContainer = () => {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const isSelectedUserTyping = selectedUser && typingUsers[selectedUser._id];
 
   return (
     <>
@@ -65,6 +69,12 @@ const ChatContainer = () => {
                 </div>
               );
             })}
+
+            {isSelectedUserTyping && (
+              <div className="flex justify-start">
+                <TypingText username={selectedUser.username} />
+              </div>
+            )}
 
             <div ref={bottomRef} />
           </div>

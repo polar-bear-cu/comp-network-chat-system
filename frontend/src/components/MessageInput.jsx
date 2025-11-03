@@ -1,16 +1,62 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { Button } from "./ui/button";
 import { useChatStore } from "@/store/useChatStore";
 import { useGroupStore } from "@/store/useGroupStore";
 
 function MessageInput() {
-  const { sendMessage, selectedUser } = useChatStore();
-  const { sendGroupMessage, selectedGroup } = useGroupStore();
+  const { sendMessage, selectedUser, emitTyping, emitStopTyping } =
+    useChatStore();
+  const {
+    sendGroupMessage,
+    selectedGroup,
+    emitGroupTyping,
+    emitGroupStopTyping,
+  } = useGroupStore();
+
   const [text, setText] = useState("");
+  const isTypingRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (isTypingRef.current) {
+        if (selectedUser) emitStopTyping();
+        if (selectedGroup) emitGroupStopTyping();
+        isTypingRef.current = false;
+      }
+    };
+  }, [selectedUser, selectedGroup, emitStopTyping, emitGroupStopTyping]);
+
+  const handleTextChange = (e) => {
+    const value = e.target.value;
+    setText(value);
+
+    if (!value.trim()) {
+      if (isTypingRef.current) {
+        if (selectedUser) emitStopTyping();
+        if (selectedGroup) emitGroupStopTyping();
+        isTypingRef.current = false;
+      }
+      return;
+    }
+
+    if (!isTypingRef.current) {
+      if (selectedUser) emitTyping();
+      if (selectedGroup) emitGroupTyping();
+      isTypingRef.current = true;
+    }
+  };
 
   const handleSendMessage = (e) => {
     e.preventDefault();
+    if (!text.trim()) return;
+
+    if (isTypingRef.current) {
+      if (selectedUser) emitStopTyping();
+      if (selectedGroup) emitGroupStopTyping();
+      isTypingRef.current = false;
+    }
+
     if (selectedUser) {
       sendMessage(text);
     } else if (selectedGroup) {
@@ -25,7 +71,7 @@ function MessageInput() {
         <input
           type="text"
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={handleTextChange}
           className="flex-1 bg-card border border-border rounded-lg py-2 px-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="Type your message..."
         />

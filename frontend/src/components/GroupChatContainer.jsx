@@ -8,6 +8,7 @@ import MessagesLoadingSkeleton from "./MessagesLoadingSkeleton";
 import NoGroupChatHistoryPlaceholder from "./NoGroupChatHistoryPlaceHolder";
 import { formatMessageTime } from "@/lib/utils";
 import { UserRoundMinus, UserRoundPlus } from "lucide-react";
+import TypingText from "./TypingText";
 
 const GroupChatContainer = () => {
   const {
@@ -17,6 +18,7 @@ const GroupChatContainer = () => {
     getMessagesByGroupId,
     subscribeToGroupMessages,
     unsubscribeFromGroupMessages,
+    groupTypingUsers,
   } = useGroupStore();
   const { authUser } = useAuthStore();
   const bottomRef = useRef(null);
@@ -42,6 +44,12 @@ const GroupChatContainer = () => {
   }, [messages]);
 
   const isMember = selectedGroup.members?.some((m) => m._id === authUser?._id);
+  const typingInGroup =
+    selectedGroup._id && groupTypingUsers[selectedGroup._id]
+      ? Object.entries(groupTypingUsers[selectedGroup._id])
+          .filter(([userId]) => userId !== authUser._id)
+          .map(([, username]) => username)
+      : [];
 
   return (
     <div className="flex flex-col h-full">
@@ -100,6 +108,21 @@ const GroupChatContainer = () => {
                 </div>
               );
             })}
+
+            {typingInGroup.length > 0 && (
+              <div className="flex justify-start">
+                <TypingText
+                  username={
+                    typingInGroup.length === 1
+                      ? typingInGroup[0]
+                      : typingInGroup.length === 2
+                      ? `${typingInGroup[0]} and ${typingInGroup[1]}`
+                      : `${typingInGroup[0]}, ${typingInGroup[1]} and others`
+                  }
+                />
+              </div>
+            )}
+
             <div ref={bottomRef} />
           </div>
         ) : (
