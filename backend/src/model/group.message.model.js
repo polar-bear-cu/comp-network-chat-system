@@ -5,7 +5,7 @@ const groupMessageSchema = new mongoose.Schema(
     sender: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
     },
     groupId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -16,6 +16,14 @@ const groupMessageSchema = new mongoose.Schema(
       type: String,
       trim: true,
       maxlength: 2000,
+    },
+    isSystemMessage: {
+      type: Boolean,
+      default: false,
+    },
+    systemMessageType: {
+      type: String,
+      enum: ["join", "leave", null],
     },
   },
   { timestamps: true }

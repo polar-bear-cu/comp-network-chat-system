@@ -7,6 +7,7 @@ import GroupChatHeader from "./GroupChatHeader";
 import MessagesLoadingSkeleton from "./MessagesLoadingSkeleton";
 import NoGroupChatHistoryPlaceholder from "./NoGroupChatHistoryPlaceHolder";
 import { formatMessageTime } from "@/lib/utils";
+import { UserRoundMinus, UserRoundPlus } from "lucide-react";
 
 const GroupChatContainer = () => {
   const {
@@ -54,6 +55,23 @@ const GroupChatContainer = () => {
         ) : messages.length > 0 ? (
           <div className="max-w-3xl mx-auto space-y-6">
             {messages.map((msg) => {
+              if (msg.isSystemMessage) {
+                return (
+                  <div key={msg._id} className="flex justify-center my-4">
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted/50 border border-border text-muted-foreground text-sm">
+                      {msg.systemMessageType === "join" ? (
+                        <UserRoundPlus className="w-4 h-4 text-primary" />
+                      ) : (
+                        <UserRoundMinus className="w-4 h-4 text-primary" />
+                      )}
+                      <span>{msg.text}</span>
+                      <span className="opacity-50">
+                        {formatMessageTime(msg.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
               const isMe = msg.sender._id === authUser._id;
               return (
                 <div
