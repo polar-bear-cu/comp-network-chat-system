@@ -14,6 +14,11 @@ socketServer.use(socketAuthMiddleware);
 
 const userSocketMap = {};
 
+const typingState = {
+  direct: {}, // { userId: { receiverId: true } }
+  group: {}, // { groupId: { userId: username } }
+};
+
 export function getReceiverSocketId(userId) {
   return userSocketMap[userId];
 }
@@ -27,6 +32,11 @@ socketServer.on("connection", (socket) => {
   socket.join(userId);
 
   socket.on("typing", ({ receiverId }) => {
+    if (!typingState.direct[userId]) {
+      typingState.direct[userId] = {};
+    }
+    typingState.direct[userId][receiverId] = true;
+
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
       socketServer.to(receiverSocketId).emit("userTyping", {
@@ -36,6 +46,13 @@ socketServer.on("connection", (socket) => {
   });
 
   socket.on("stopTyping", ({ receiverId }) => {
+    if (typingState.direct[userId]) {
+      delete typingState.direct[userId][receiverId];
+      if (Object.keys(typingState.direct[userId]).length === 0) {
+        delete typingState.direct[userId];
+      }
+    }
+
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
       socketServer.to(receiverSocketId).emit("userStopTyping", {
@@ -46,13 +63,44 @@ socketServer.on("connection", (socket) => {
 
   socket.on("joinGroup", ({ groupId }) => {
     socket.join(groupId);
+
+    if (typingState.group[groupId]) {
+      Object.entries(typingState.group[groupId]).forEach(
+        ([typingUserId, username]) => {
+          if (typingUserId !== userId) {
+            socket.emit("groupUserTyping", {
+              groupId,
+              userId: typingUserId,
+              username,
+            });
+          }
+        }
+      );
+    }
   });
 
   socket.on("leaveGroup", ({ groupId }) => {
+    if (typingState.group[groupId] && typingState.group[groupId][userId]) {
+      delete typingState.group[groupId][userId];
+      if (Object.keys(typingState.group[groupId]).length === 0) {
+        delete typingState.group[groupId];
+      }
+
+      socket.to(groupId).emit("groupUserStopTyping", {
+        groupId,
+        userId,
+      });
+    }
+
     socket.leave(groupId);
   });
 
   socket.on("groupTyping", ({ groupId }) => {
+    if (!typingState.group[groupId]) {
+      typingState.group[groupId] = {};
+    }
+    typingState.group[groupId][userId] = socket.user.username;
+
     socket.to(groupId).emit("groupUserTyping", {
       groupId,
       userId,
@@ -61,6 +109,13 @@ socketServer.on("connection", (socket) => {
   });
 
   socket.on("groupStopTyping", ({ groupId }) => {
+    if (typingState.group[groupId]) {
+      delete typingState.group[groupId][userId];
+      if (Object.keys(typingState.group[groupId]).length === 0) {
+        delete typingState.group[groupId];
+      }
+    }
+
     socket.to(groupId).emit("groupUserStopTyping", {
       groupId,
       userId,
@@ -69,6 +124,33 @@ socketServer.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     delete userSocketMap[userId];
+
+    if (typingState.direct[userId]) {
+      Object.keys(typingState.direct[userId]).forEach((receiverId) => {
+        const receiverSocketId = getReceiverSocketId(receiverId);
+        if (receiverSocketId) {
+          socketServer.to(receiverSocketId).emit("userStopTyping", {
+            senderId: userId,
+          });
+        }
+      });
+      delete typingState.direct[userId];
+    }
+
+    Object.keys(typingState.group).forEach((groupId) => {
+      if (typingState.group[groupId][userId]) {
+        delete typingState.group[groupId][userId];
+        if (Object.keys(typingState.group[groupId]).length === 0) {
+          delete typingState.group[groupId];
+        }
+
+        socketServer.to(groupId).emit("groupUserStopTyping", {
+          groupId,
+          userId,
+        });
+      }
+    });
+
     socketServer.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });
