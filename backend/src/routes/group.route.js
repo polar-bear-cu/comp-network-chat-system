@@ -5,6 +5,7 @@ import {
   getAllGroups,
   getGroupById,
   joinGroup,
+  leaveGroup,
 } from "../controllers/group.controller.js";
 import {
   getMessagesByGroupId,
@@ -22,5 +23,6 @@ router.get("/:id/messages", getMessagesByGroupId);
 router.post("/", createGroup);
 router.post("/:id/join", joinGroup);
 router.post("/:id/send", sendGroupMessage);
+router.post("/:id/leave", leaveGroup);
 
 export default router;

@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGroupStore } from "@/store/useGroupStore";
-import { Users, X } from "lucide-react";
+import { LogOut, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,8 +12,10 @@ import {
 import { useAuthStore } from "@/store/useAuthStore";
 
 const GroupChatHeader = () => {
-  const { selectedGroup, setSelectedGroup } = useGroupStore();
+  const { selectedGroup, setSelectedGroup, leaveGroup } = useGroupStore();
   const { authUser } = useAuthStore();
+  const [isLeaving, setLeaving] = useState(false);
+  const [errorText, setErrorText] = useState("");
 
   if (!selectedGroup) return null;
 
@@ -24,6 +26,9 @@ const GroupChatHeader = () => {
     return 0;
   });
 
+  const isOwner = selectedGroup.owner._id === authUser._id;
+  const isMember = members.some((m) => m._id === authUser._id);
+
   useEffect(() => {
     const handleEscKey = (event) => {
       if (event.key === "Escape") setSelectedGroup(null);
@@ -31,6 +36,19 @@ const GroupChatHeader = () => {
     window.addEventListener("keydown", handleEscKey);
     return () => window.removeEventListener("keydown", handleEscKey);
   }, [setSelectedGroup]);
+
+  async function handleLeaveGroup() {
+    if (!selectedGroup) return;
+    setErrorText("");
+    setLeaving(true);
+
+    const res = await leaveGroup(selectedGroup._id);
+    if (!res.success) {
+      setErrorText(res.message);
+    }
+
+    setLeaving(false);
+  }
 
   return (
     <div className="flex justify-between items-center border-b max-h-[84px] px-6 flex-1 bg-background border-border text-foreground">
@@ -82,6 +100,56 @@ const GroupChatHeader = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {isMember && !isOwner && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                <LogOut className="w-4 h-4" />
+                Leave
+              </Button>
+            </DialogTrigger>
+
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Leave Group</DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Are you sure you want to leave{" "}
+                  <strong>{selectedGroup.name}</strong>? You won't be able to
+                  see group messages anymore.
+                </p>
+
+                {errorText && (
+                  <p className="text-sm text-destructive">{errorText}</p>
+                )}
+
+                <div className="flex justify-end gap-2">
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      disabled={isLeaving}
+                      onClick={() => {
+                        setErrorText("");
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </DialogTrigger>
+                  <Button
+                    variant="destructive"
+                    onClick={handleLeaveGroup}
+                    disabled={isLeaving}
+                  >
+                    {isLeaving ? "Leaving..." : "Leave Group"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
 
         <button onClick={() => setSelectedGroup(null)}>
           <X className="w-5 h-5 text-muted-foreground hover:text-foreground cursor-pointer" />
