@@ -13,15 +13,22 @@ export const useGroupStore = create((set, get) => ({
   groupTypingUsers: {},
 
   setOpenCreateGroupPopup: (open) => set({ openCreateGroupPopup: open }),
+
   setSelectedGroup: (group) => {
     const current = get().selectedGroup;
     if (current?._id === group?._id) return;
 
     if (current) {
       const socket = useAuthStore.getState().socket;
-      if (socket) {
+      if (socket && socket.connected) {
         socket.emit("leaveGroup", { groupId: current._id });
       }
+
+      set((state) => {
+        const newGroupTypingUsers = { ...state.groupTypingUsers };
+        delete newGroupTypingUsers[current._id];
+        return { groupTypingUsers: newGroupTypingUsers };
+      });
     }
 
     set({ selectedGroup: group });
@@ -29,13 +36,9 @@ export const useGroupStore = create((set, get) => ({
     if (group !== null) {
       useChatStore.getState().setSelectedUser(null);
       const socket = useAuthStore.getState().socket;
-      if (socket) {
+      if (socket && socket.connected) {
         socket.emit("joinGroup", { groupId: group._id });
       }
-    }
-
-    if (group !== null) {
-      useChatStore.getState().setSelectedUser(null);
     }
   },
 
@@ -45,7 +48,7 @@ export const useGroupStore = create((set, get) => ({
       const res = await axiosInstance.get("/groups");
       set({ allGroups: res.data });
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching groups:", error);
     } finally {
       set({ isGroupsLoading: false });
     }
@@ -67,17 +70,17 @@ export const useGroupStore = create((set, get) => ({
     set({
       selectedGroup: null,
       allGroups: [],
-      activeTab: "chats",
+      messages: [],
+      groupTypingUsers: {},
     }),
 
   joinGroup: async (groupId) => {
     try {
       const res = await axiosInstance.post(`/groups/${groupId}/join`);
       await get().getAllGroups();
-
       return { success: true, group: res.data };
     } catch (error) {
-      console.error(error);
+      console.error("Error joining group:", error);
       return {
         success: false,
         message: error?.response?.data?.message || "Failed to join group",
@@ -109,7 +112,7 @@ export const useGroupStore = create((set, get) => ({
       const res = await axiosInstance.get(`/groups/${groupId}/messages`);
       set({ messages: res.data });
     } catch (error) {
-      throw error;
+      console.error("Error fetching group messages:", error);
     } finally {
       set({ isMessagesLoading: false });
     }
@@ -120,7 +123,10 @@ export const useGroupStore = create((set, get) => ({
     if (!selectedGroup) return;
 
     const socket = useAuthStore.getState().socket;
-    if (!socket) return;
+    if (!socket || !socket.connected) {
+      console.warn("Socket not connected");
+      return;
+    }
 
     socket.emit("groupTyping", { groupId: selectedGroup._id });
   },
@@ -130,7 +136,10 @@ export const useGroupStore = create((set, get) => ({
     if (!selectedGroup) return;
 
     const socket = useAuthStore.getState().socket;
-    if (!socket) return;
+    if (!socket || !socket.connected) {
+      console.warn("Socket not connected");
+      return;
+    }
 
     socket.emit("groupStopTyping", { groupId: selectedGroup._id });
   },
@@ -138,14 +147,19 @@ export const useGroupStore = create((set, get) => ({
   setGroupTypingUser: (groupId, userId, username, isTyping) => {
     set((state) => {
       const groupTyping = { ...state.groupTypingUsers };
+
       if (!groupTyping[groupId]) {
         groupTyping[groupId] = {};
       }
 
-      if (isTyping) {
+      if (isTyping && username) {
         groupTyping[groupId][userId] = username;
       } else {
         delete groupTyping[groupId][userId];
+
+        if (Object.keys(groupTyping[groupId]).length === 0) {
+          delete groupTyping[groupId];
+        }
       }
 
       return { groupTypingUsers: groupTyping };
@@ -157,13 +171,11 @@ export const useGroupStore = create((set, get) => ({
       const { selectedGroup, messages } = get();
       const res = await axiosInstance.post(
         `/groups/${selectedGroup._id}/send`,
-        {
-          text,
-        }
+        { text }
       );
-      set({ messages: messages.concat(res.data) });
+      set({ messages: [...messages, res.data] });
     } catch (error) {
-      throw error;
+      console.error("Error sending group message:", error);
     }
   },
 
@@ -173,7 +185,6 @@ export const useGroupStore = create((set, get) => ({
 
     socket.on("newGroup", (newGroup) => {
       const currentGroups = get().allGroups;
-
       const groupExists = currentGroups.some((g) => g._id === newGroup._id);
 
       if (!groupExists) {
@@ -212,7 +223,6 @@ export const useGroupStore = create((set, get) => ({
 
     socket.on("newGroupMessage", (newMessage) => {
       const isMessageForCurrentGroup = newMessage.groupId === selectedGroup._id;
-
       if (!isMessageForCurrentGroup) return;
 
       const currentMessages = get().messages;
@@ -220,10 +230,12 @@ export const useGroupStore = create((set, get) => ({
     });
 
     socket.on("groupUserTyping", ({ groupId, userId, username }) => {
+      console.log("Group user typing:", groupId, userId, username);
       get().setGroupTypingUser(groupId, userId, username, true);
     });
 
     socket.on("groupUserStopTyping", ({ groupId, userId }) => {
+      console.log("Group user stop typing:", groupId, userId);
       get().setGroupTypingUser(groupId, userId, null, false);
     });
   },

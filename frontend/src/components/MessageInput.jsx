@@ -26,6 +26,7 @@ function MessageInput() {
       if (isTypingRef.current) {
         if (selectedUser) emitStopTyping();
         if (selectedGroup) emitGroupStopTyping();
+        isTypingRef.current = false;
       }
     };
   }, [selectedUser, selectedGroup, emitStopTyping, emitGroupStopTyping]);
@@ -39,6 +40,9 @@ function MessageInput() {
         if (selectedUser) emitStopTyping();
         if (selectedGroup) emitGroupStopTyping();
         isTypingRef.current = false;
+      }
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
       }
       return;
     }
@@ -56,6 +60,7 @@ function MessageInput() {
     typingTimeoutRef.current = setTimeout(() => {
       if (selectedUser) emitStopTyping();
       if (selectedGroup) emitGroupStopTyping();
+      isTypingRef.current = false;
     }, 2000);
   };
 
