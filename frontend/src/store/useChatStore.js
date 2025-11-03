@@ -100,4 +100,25 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     socket.off("newMessage");
   },
+
+  subscribeToUsers: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    socket.on("newUser", (newUser) => {
+      const currentContacts = get().allContacts;
+      const userExists = currentContacts.some((c) => c._id === newUser._id);
+
+      if (!userExists) {
+        set({ allContacts: [newUser, ...currentContacts] });
+      }
+    });
+  },
+
+  unsubscribeFromUsers: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    socket.off("newUser");
+  },
 }));

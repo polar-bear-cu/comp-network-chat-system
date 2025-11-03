@@ -1,3 +1,4 @@
+import { socketServer } from "../lib/socket.js";
 import { generateToken } from "../lib/utils.js";
 import User from "../model/user.model.js";
 import bcrypt from "bcryptjs";
@@ -26,6 +27,11 @@ export async function signup(req, res) {
     if (newUser) {
       generateToken(newUser._id, res);
       await newUser.save();
+
+      socketServer.emit("newUser", {
+        _id: newUser._id,
+        username: newUser.username,
+      });
 
       res.status(201).json({
         _id: newUser._id,
@@ -57,6 +63,7 @@ export async function login(req, res) {
     }
 
     generateToken(user._id, res);
+
     res.status(200).json({
       _id: user._id,
       username: user.username,
