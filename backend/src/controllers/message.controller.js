@@ -7,7 +7,9 @@ export async function getAllContacts(req, res) {
     const loggedInUserId = req.user._id;
     const filteredUsers = await User.find({
       _id: { $ne: loggedInUserId },
-    }).select("-password");
+    })
+      .select("-password")
+      .sort({ createdAt: -1 });
     res.status(200).json(filteredUsers);
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error" });
@@ -84,7 +86,9 @@ export async function getChatPartners(req, res) {
     ];
     const chatPartners = await User.find({
       _id: { $in: chatPartnersId },
-    }).select("-password");
+    })
+      .select("-password")
+      .sort({ createdAt: -1 });
 
     res.status(200).json(chatPartners);
   } catch (error) {

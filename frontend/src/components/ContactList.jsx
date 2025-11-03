@@ -19,9 +19,13 @@ const ContactList = () => {
   if (!Array.isArray(allContacts) || allContacts.length === 0)
     return <NoContactFound />;
 
+  const sortedContact = [...allContacts].sort((a, b) => {
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
   return (
     <>
-      {allContacts.reverse().map((contact) => {
+      {sortedContact.map((contact) => {
         const isOnline = onlineUsers.includes(contact._id);
 
         return (

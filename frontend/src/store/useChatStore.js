@@ -120,6 +120,5 @@ export const useChatStore = create((set, get) => ({
     if (!socket) return;
 
     socket.off("newUser");
-    socket.off("userLoggedIn");
   },
 }));
