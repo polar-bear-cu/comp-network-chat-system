@@ -110,7 +110,7 @@ export const useChatStore = create((set, get) => ({
       const userExists = currentContacts.some((c) => c._id === newUser._id);
 
       if (!userExists) {
-        set({ allContacts: [newUser, ...currentContacts] });
+        set({ allContacts: [...currentContacts, newUser] });
       }
     });
 
@@ -119,7 +119,7 @@ export const useChatStore = create((set, get) => ({
       const userExists = currentContacts.some((c) => c._id === user._id);
 
       if (!userExists) {
-        set({ allContacts: [user, ...currentContacts] });
+        set({ allContacts: [...currentContacts, user] });
       }
     });
   },
