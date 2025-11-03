@@ -21,7 +21,7 @@ const ContactList = () => {
 
   return (
     <>
-      {allContacts.map((contact) => {
+      {allContacts.reverse().map((contact) => {
         const isOnline = onlineUsers.includes(contact._id);
 
         return (

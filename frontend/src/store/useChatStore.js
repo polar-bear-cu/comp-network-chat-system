@@ -110,7 +110,7 @@ export const useChatStore = create((set, get) => ({
       const userExists = currentContacts.some((c) => c._id === newUser._id);
 
       if (!userExists) {
-        set({ allContacts: [newUser, ...currentContacts].reverse() });
+        set({ allContacts: [newUser, ...currentContacts] });
       }
     });
 
@@ -119,7 +119,7 @@ export const useChatStore = create((set, get) => ({
       const userExists = currentContacts.some((c) => c._id === user._id);
 
       if (!userExists) {
-        set({ allContacts: [user, ...currentContacts].reverse() });
+        set({ allContacts: [user, ...currentContacts] });
       }
     });
   },
