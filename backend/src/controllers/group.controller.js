@@ -1,4 +1,5 @@
 import { socketServer } from "../lib/socket.js";
+import GroupMessage from "../model/group.message.model.js";
 import Group from "../model/group.model.js";
 
 export async function getAllGroups(req, res) {
@@ -92,7 +93,19 @@ export async function joinGroup(req, res) {
       .populate("owner", "username")
       .populate("members", "username");
 
+    const systemMessage = new GroupMessage({
+      groupId,
+      text: `${req.user.username} joined the group`,
+      isSystemMessage: true,
+      systemMessageType: "join",
+    });
+    await systemMessage.save();
+
     socketServer.emit("groupUpdated", updatedGroup);
+    socketServer.emit("newGroupMessage", {
+      ...systemMessage.toObject(),
+      group,
+    });
 
     res.status(200).json(updatedGroup);
   } catch (error) {
@@ -137,7 +150,20 @@ export async function leaveGroup(req, res) {
       .populate("owner", "username")
       .populate("members", "username");
 
+    const systemMessage = new GroupMessage({
+      groupId,
+      text: `${req.user.username} left the group`,
+      isSystemMessage: true,
+      systemMessageType: "leave",
+    });
+    await systemMessage.save();
+
     socketServer.emit("groupUpdated", updatedGroup);
+    socketServer.emit("newGroupMessage", {
+      ...systemMessage.toObject(),
+      group,
+    });
+
     res.status(200).json(updatedGroup);
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
