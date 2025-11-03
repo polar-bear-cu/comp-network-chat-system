@@ -100,3 +100,44 @@ export async function joinGroup(req, res) {
     return res.status(500).json({ message: "Internal server error" });
   }
 }
+
+export async function leaveGroup(req, res) {
+  try {
+    const loggedInUserId = req.user_id;
+    const groupId = req.params.id;
+
+    if (!groupId) {
+      return res.status(400).json({ message: "No group id" });
+    }
+
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(400).json({ message: "Invalid group id" });
+    }
+
+    if (!group.members.includes(loggedInUserId)) {
+      return res.status(400).json({ message: "Not a member of this group" });
+    }
+
+    if (group.owner.toString() === loggedInUserId.toString()) {
+      return res.status(400).json({
+        message: "Owner can't leave the group",
+      });
+    }
+
+    await Group.findByIdAndUpdate(
+      groupId,
+      { $pull: { members: loggedInUserId } },
+      { new: true }
+    );
+
+    const updatedGroup = await Group.findById(groupId)
+      .populate("owner", "username")
+      .populate("members", "username");
+
+    socketServer.emit("groupUpdated", updatedGroup);
+    res.status(200).json(updatedGroup);
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}

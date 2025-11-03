@@ -69,6 +69,24 @@ export const useGroupStore = create((set, get) => ({
     }
   },
 
+  leaveGroup: async (groupId) => {
+    try {
+      const res = await axiosInstance.post(`/groups/${groupId}/leave`);
+      await get().getAllGroups();
+
+      const currentSelected = get().selectedGroup;
+      if (currentSelected?._id === groupId) {
+        set({ selectedGroup: null, messages: [] });
+      }
+      return { success: true, group: res.data };
+    } catch (error) {
+      return {
+        success: false,
+        message: error?.response?.data?.message || "Fail to leave group",
+      };
+    }
+  },
+
   getMessagesByGroupId: async (groupId) => {
     set({ isMessagesLoading: true });
     try {
