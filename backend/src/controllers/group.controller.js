@@ -103,7 +103,7 @@ export async function joinGroup(req, res) {
 
 export async function leaveGroup(req, res) {
   try {
-    const loggedInUserId = req.user_id;
+    const loggedInUserId = req.user._id;
     const groupId = req.params.id;
 
     if (!groupId) {
@@ -116,7 +116,9 @@ export async function leaveGroup(req, res) {
     }
 
     if (!group.members.includes(loggedInUserId)) {
-      return res.status(400).json({ message: "Not a member of this group" });
+      return res
+        .status(400)
+        .json({ message: `${group.members} : ${loggedInUserId}` });
     }
 
     if (group.owner.toString() === loggedInUserId.toString()) {
