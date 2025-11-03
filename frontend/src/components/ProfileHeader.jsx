@@ -12,7 +12,7 @@ const ProfileHeader = () => {
   return (
     <div className="p-5 border-b border-border max-h-[84px]">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-4">
           <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border border-border">
             <User className="w-8 h-8 text-primary" />
           </div>

@@ -18,7 +18,8 @@ import GroupChatContainer from "@/components/GroupChatContainer";
 const ChatPage = () => {
   const navigate = useNavigate();
   const { authUser, isCheckingAuth, checkAuth } = useAuthStore();
-  const { activeTab, selectedUser } = useChatStore();
+  const { activeTab, selectedUser, subscribeToUsers, unsubscribeFromUsers } =
+    useChatStore();
   const {
     openCreateGroupPopup,
     selectedGroup,
@@ -37,9 +38,19 @@ const ChatPage = () => {
   useEffect(() => {
     if (authUser) {
       subscribeToGroups();
+      subscribeToUsers();
     }
-    return () => unsubscribeFromGroups();
-  }, [authUser, subscribeToGroups, unsubscribeFromGroups]);
+    return () => {
+      unsubscribeFromGroups();
+      unsubscribeFromUsers();
+    };
+  }, [
+    authUser,
+    subscribeToGroups,
+    unsubscribeFromGroups,
+    subscribeToUsers,
+    unsubscribeFromUsers,
+  ]);
 
   if (isCheckingAuth) return <PageLoader />;
 
@@ -48,7 +59,7 @@ const ChatPage = () => {
       <div className="relative w-full max-w-7xl h-[90vh] rounded-2xl shadow-2xl overflow-hidden">
         <BorderAnimatedContainer>
           {/* Left Panel */}
-          <div className="w-80 bg-sidebar/50 backdrop-blur-sm flex flex-col">
+          <div className="w-100 bg-sidebar/50 backdrop-blur-sm flex flex-col">
             <ProfileHeader />
             <ActiveTabSwitch />
 
