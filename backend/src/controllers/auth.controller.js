@@ -64,11 +64,6 @@ export async function login(req, res) {
 
     generateToken(user._id, res);
 
-    socketServer.emit("userLoggedIn", {
-      _id: user._id,
-      username: user.username,
-    });
-
     res.status(200).json({
       _id: user._id,
       username: user.username,

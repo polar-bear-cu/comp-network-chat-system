@@ -113,15 +113,6 @@ export const useChatStore = create((set, get) => ({
         set({ allContacts: [...currentContacts, newUser] });
       }
     });
-
-    socket.on("userLoggedIn", (user) => {
-      const currentContacts = get().allContacts;
-      const userExists = currentContacts.some((c) => c._id === user._id);
-
-      if (!userExists) {
-        set({ allContacts: [...currentContacts, user] });
-      }
-    });
   },
 
   unsubscribeFromUsers: () => {
