@@ -13,6 +13,8 @@ export const useChatStore = create((set, get) => ({
   isMessagesLoading: false,
   typingUsers: {},
   unreadCounts: {},
+  canSendMessage: true,
+  lastSentTime: 0,
 
   setActiveTab: (tab) => set({ activeTab: tab }),
 
@@ -56,6 +58,16 @@ export const useChatStore = create((set, get) => ({
       console.error("Error fetching chats:", error);
     } finally {
       set({ isUsersLoading: false });
+    }
+  },
+
+  // Background sync without showing loading to user
+  getChatPartnersSilent: async () => {
+    try {
+      const res = await axiosInstance.get("/messages/chats");
+      set({ chats: res.data });
+    } catch (error) {
+      console.error("Error fetching chats silently:", error);
     }
   },
 
@@ -142,17 +154,40 @@ export const useChatStore = create((set, get) => ({
 
   sendMessage: async (text) => {
     try {
-      const { selectedUser, messages } = get();
+      const { selectedUser, messages, canSendMessage, lastSentTime } = get();
+      const now = Date.now();
+      
+      if (!canSendMessage || (now - lastSentTime) < 1000) {
+        console.log("Frontend rate limit: Message queued");
+        return false;
+      }
+      
       const res = await axiosInstance.post(
         `/messages/send/${selectedUser._id}`,
         { text }
       );
-      set({ messages: [...messages, res.data] });
       
-      // Refresh chat partners to update order after sending a message
-      get().getChatPartners();
+      set({ 
+        messages: [...messages, res.data],
+        canSendMessage: false,
+        lastSentTime: now
+      });
+      
+      setTimeout(() => {
+        set({ canSendMessage: true });
+      }, 1000);
+      
+      get().getChatPartnersSilent();
+      
+      return true;
     } catch (error) {
+      if (error.response?.status === 429) {
+        console.log("Backend rate limit: Message queued");
+        return false;
+      }
+      
       console.error("Error sending message:", error);
+      return false;
     }
   },
 
@@ -236,8 +271,8 @@ export const useChatStore = create((set, get) => ({
     socket.on("newMessageNotification", (newMessage) => {
       const { selectedUser } = get();
       
-      // Always refresh chat partners to update order when any message arrives
-      get().getChatPartners();
+      // Silent background sync to update chat order - no loading shown to user
+      get().getChatPartnersSilent();
       
       // Only increment unread count if message is NOT from currently selected user
       if (!selectedUser || selectedUser._id !== newMessage.senderId) {
