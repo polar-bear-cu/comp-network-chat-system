@@ -4,11 +4,15 @@ import { useChatStore } from "./useChatStore";
 import { useAuthStore } from "./useAuthStore";
 
 export const useGroupStore = create((set, get) => ({
-  allGroups: [],
+  allGroups: [], // Keep for backward compatibility
+  myGroups: [], // Groups user has joined
+  availableGroups: [], // Groups user can join
   messages: [],
   isMessagesLoading: false,
   selectedGroup: null,
   isGroupsLoading: false,
+  isMyGroupsLoading: false,
+  isAvailableGroupsLoading: false,
   openCreateGroupPopup: false,
   groupTypingUsers: {},
 
@@ -54,9 +58,38 @@ export const useGroupStore = create((set, get) => ({
     }
   },
 
+  // Get groups that user has joined
+  getMyGroups: async () => {
+    set({ isMyGroupsLoading: true });
+    try {
+      const res = await axiosInstance.get("/groups/my-groups");
+      set({ myGroups: res.data });
+    } catch (error) {
+      console.error("Error fetching my groups:", error);
+    } finally {
+      set({ isMyGroupsLoading: false });
+    }
+  },
+
+  // Get groups that user can join
+  getAvailableGroups: async () => {
+    set({ isAvailableGroupsLoading: true });
+    try {
+      const res = await axiosInstance.get("/groups/available");
+      set({ availableGroups: res.data });
+    } catch (error) {
+      console.error("Error fetching available groups:", error);
+    } finally {
+      set({ isAvailableGroupsLoading: false });
+    }
+  },
+
   createGroup: async (name) => {
     try {
       const res = await axiosInstance.post("/groups", { name });
+      
+      await get().getMyGroups();
+      
       return { success: true, group: res.data };
     } catch (error) {
       return {
@@ -77,7 +110,12 @@ export const useGroupStore = create((set, get) => ({
   joinGroup: async (groupId) => {
     try {
       const res = await axiosInstance.post(`/groups/${groupId}/join`);
-      await get().getAllGroups();
+      
+      await Promise.all([
+        get().getMyGroups(),
+        get().getAvailableGroups()
+      ]);
+      
       return { success: true, group: res.data };
     } catch (error) {
       console.error("Error joining group:", error);
@@ -91,7 +129,11 @@ export const useGroupStore = create((set, get) => ({
   leaveGroup: async (groupId) => {
     try {
       const res = await axiosInstance.post(`/groups/${groupId}/leave`);
-      await get().getAllGroups();
+      
+      await Promise.all([
+        get().getMyGroups(),
+        get().getAvailableGroups()
+      ]);
 
       const currentSelected = get().selectedGroup;
       if (currentSelected?._id === groupId) {

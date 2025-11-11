@@ -14,6 +14,42 @@ export async function getAllGroups(req, res) {
   }
 }
 
+export async function getMyGroups(req, res) {
+  try {
+    const loggedInUserId = req.user._id;
+    
+    const myGroups = await Group.find({
+      members: { $in: [loggedInUserId] }
+    })
+      .populate("owner", "username")
+      .populate("members", "username")
+      .sort({ updatedAt: -1 }); // Sort by most recently updated
+
+    res.status(200).json(myGroups);
+  } catch (error) {
+    console.error("Error fetching my groups:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export async function getAvailableGroups(req, res) {
+  try {
+    const loggedInUserId = req.user._id;
+    
+    const availableGroups = await Group.find({
+      members: { $nin: [loggedInUserId] }
+    })
+      .populate("owner", "username")
+      .populate("members", "username")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(availableGroups);
+  } catch (error) {
+    console.error("Error fetching available groups:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+
 export async function getGroupById(req, res) {
   try {
     const groupId = req.params.id;

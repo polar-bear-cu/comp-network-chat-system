@@ -3,6 +3,8 @@ import { protectRoute } from "../middleware/auth.middleware.js";
 import {
   createGroup,
   getAllGroups,
+  getMyGroups,
+  getAvailableGroups,
   getGroupById,
   joinGroup,
   leaveGroup,
@@ -17,6 +19,8 @@ const router = express.Router();
 router.use(protectRoute);
 
 router.get("/", getAllGroups);
+router.get("/my-groups", getMyGroups);
+router.get("/available", getAvailableGroups);
 router.get("/:id", getGroupById);
 router.get("/:id/messages", getMessagesByGroupId);
 
