@@ -303,6 +303,10 @@ export const useGroupStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
 
+    socket.off("newGroup");
+    socket.off("groupUpdated");
+    socket.off("newGroupMessageNotification");
+
     socket.on("newGroup", (newGroup) => {
       const { authUser } = useAuthStore.getState();
       const currentGroups = get().allGroups;
@@ -371,6 +375,12 @@ export const useGroupStore = create((set, get) => ({
 
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
+
+    // Remove existing listeners to prevent duplicates
+    socket.off("newGroupMessage");
+    socket.off("groupUserTyping");
+    socket.off("groupUserStopTyping");
+    socket.off("groupMessagesRead");
 
     socket.on("newGroupMessage", (newMessage) => {
       const { selectedGroup } = get();

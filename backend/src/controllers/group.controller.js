@@ -158,6 +158,11 @@ export async function joinGroup(req, res) {
       senderId: loggedInUserId,
     });
 
+    await GroupMessage.updateOne(
+      { _id: systemMessage._id },
+      { $addToSet: { readBy: loggedInUserId } }
+    );
+
     res.status(200).json(updatedGroup);
   } catch (error) {
     console.error(error);
@@ -220,6 +225,11 @@ export async function leaveGroup(req, res) {
       groupId,
       senderId: loggedInUserId,
     });
+
+    await GroupMessage.updateOne(
+      { _id: systemMessage._id },
+      { $addToSet: { readBy: loggedInUserId } }
+    );
 
     res.status(200).json(updatedGroup);
   } catch (error) {
