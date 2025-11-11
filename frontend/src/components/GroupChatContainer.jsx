@@ -63,6 +63,7 @@ const GroupChatContainer = () => {
         ) : messages.length > 0 ? (
           <div className="max-w-3xl mx-auto space-y-6">
             {messages.map((msg) => {
+              console.log("Message: ", msg);
               if (msg.isSystemMessage) {
                 return (
                   <div key={msg._id} className="flex justify-center my-4">
@@ -89,7 +90,9 @@ const GroupChatContainer = () => {
                     </p>
                   )}
                   <div
-                    className={`flex items-end gap-2 ${isMe ? "justify-end" : "justify-start"}`}
+                    className={`flex items-end gap-2 ${
+                      isMe ? "justify-end" : "justify-start"
+                    }`}
                   >
                     {isMe && msg.readBy && msg.readBy.length > 0 && (
                       <p className="text-xs opacity-70 text-muted-foreground mb-1">
