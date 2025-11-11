@@ -262,6 +262,7 @@ export const useGroupStore = create((set, get) => ({
         { text }
       );
       
+      // Add message locally for immediate feedback, socket will handle for others
       set({ 
         messages: [...messages, res.data],
         groupMessageCooldowns: {
@@ -303,11 +304,18 @@ export const useGroupStore = create((set, get) => ({
     if (!socket) return;
 
     socket.on("newGroup", (newGroup) => {
+      const { authUser } = useAuthStore.getState();
       const currentGroups = get().allGroups;
       const groupExists = currentGroups.some((g) => g._id === newGroup._id);
 
       if (!groupExists) {
         set({ allGroups: [...currentGroups, newGroup] });
+        
+        const isUserMember = newGroup.members.some(member => member._id === authUser._id);
+        if (!isUserMember) {
+          const currentAvailableGroups = get().availableGroups;
+          set({ availableGroups: [...currentAvailableGroups, newGroup] });
+        }
       }
     });
 
@@ -333,10 +341,12 @@ export const useGroupStore = create((set, get) => ({
       
       get().getMyGroupsSilent();
       
+      // Don't increment unread count for messages sent by the current user
       if (newMessage.senderId && newMessage.senderId === authUser._id) {
         return;
       }
 
+      // Don't increment unread count if user is currently viewing this group
       if (!selectedGroup || selectedGroup._id !== newMessage.groupId) {
         set((state) => {
           const newGroupUnreadCounts = { ...state.groupUnreadCounts };
@@ -373,7 +383,12 @@ export const useGroupStore = create((set, get) => ({
       if (!isMessageForCurrentGroup) return;
 
       const currentMessages = get().messages;
-      set({ messages: [...currentMessages, newMessage] });
+      
+      // Check if message already exists to prevent duplicates
+      const messageExists = currentMessages.some(msg => msg._id === newMessage._id);
+      if (!messageExists) {
+        set({ messages: [...currentMessages, newMessage] });
+      }
       
       get().markGroupMessagesAsRead(selectedGroup._id);
     });
