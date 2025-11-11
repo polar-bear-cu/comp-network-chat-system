@@ -145,6 +145,10 @@ export async function joinGroup(req, res) {
     await systemMessage.save();
 
     await markAllPreviousMessagesAsRead(groupId, loggedInUserId);
+    await GroupMessage.updateOne(
+          { _id: systemMessage._id },
+          { $addToSet: { readBy: loggedInUserId } }
+        );
 
     socketServer.emit("groupUpdated", updatedGroup);
     socketServer.emit("newGroupMessage", {
@@ -158,10 +162,7 @@ export async function joinGroup(req, res) {
       senderId: loggedInUserId,
     });
 
-    await GroupMessage.updateOne(
-      { _id: systemMessage._id },
-      { $addToSet: { readBy: loggedInUserId } }
-    );
+    
 
     res.status(200).json(updatedGroup);
   } catch (error) {
@@ -214,6 +215,11 @@ export async function leaveGroup(req, res) {
     });
     await systemMessage.save();
 
+    await GroupMessage.updateOne(
+          { _id: systemMessage._id },
+          { $addToSet: { readBy: loggedInUserId } }
+        );
+
     socketServer.emit("groupUpdated", updatedGroup);
     socketServer.emit("newGroupMessage", {
       ...systemMessage.toObject(),
@@ -225,11 +231,6 @@ export async function leaveGroup(req, res) {
       groupId,
       senderId: loggedInUserId,
     });
-
-    await GroupMessage.updateOne(
-      { _id: systemMessage._id },
-      { $addToSet: { readBy: loggedInUserId } }
-    );
 
     res.status(200).json(updatedGroup);
   } catch (error) {
