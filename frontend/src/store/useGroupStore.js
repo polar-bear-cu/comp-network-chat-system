@@ -339,20 +339,22 @@ export const useGroupStore = create((set, get) => ({
       }
     });
 
-    socket.on("newGroupMessageNotification", (newMessage, groupId, senderId) => {
+    socket.on("newGroupMessageNotification", (data) => {
       const { selectedGroup } = get();
       const { authUser } = useAuthStore.getState();
       
       get().getMyGroupsSilent();
 
-      if (senderId && senderId === authUser._id) {
+      // Filter out messages from current user
+      if (data.senderId && data.senderId === authUser._id) {
         return;
       }
 
-      if (!selectedGroup || selectedGroup._id !== groupId) {
+      // Only increment if not currently viewing this group
+      if (!selectedGroup || selectedGroup._id !== data.groupId) {
         set((state) => {
           const newGroupUnreadCounts = { ...state.groupUnreadCounts };
-          const groupId = newMessage.groupId;
+          const groupId = data.groupId;
           newGroupUnreadCounts[groupId] = (newGroupUnreadCounts[groupId] || 0) + 1;
           return { groupUnreadCounts: newGroupUnreadCounts };
         });

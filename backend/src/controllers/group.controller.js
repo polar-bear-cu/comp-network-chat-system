@@ -162,8 +162,6 @@ export async function joinGroup(req, res) {
       senderId: loggedInUserId,
     });
 
-    
-
     res.status(200).json(updatedGroup);
   } catch (error) {
     console.error(error);
