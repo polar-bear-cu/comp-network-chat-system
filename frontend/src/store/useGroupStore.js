@@ -17,6 +17,8 @@ export const useGroupStore = create((set, get) => ({
   groupTypingUsers: {},
   groupMessageCooldowns: {},
   groupUnreadCounts: {},
+  processedNotifications: new Set(), // Track processed notification IDs
+  isSubscribed: false, // Track subscription state
 
   setOpenCreateGroupPopup: (open) => set({ openCreateGroupPopup: open }),
 
@@ -303,9 +305,19 @@ export const useGroupStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
 
+    // Prevent multiple subscriptions
+    const { isSubscribed } = get();
+    if (isSubscribed) {
+      console.log("Groups already subscribed, skipping...");
+      return;
+    }
+
+    // Clean up existing listeners
     socket.off("newGroup");
     socket.off("groupUpdated");
     socket.off("newGroupMessageNotification");
+
+    set({ isSubscribed: true });
 
     socket.on("newGroup", (newGroup) => {
       const { authUser } = useAuthStore.getState();
@@ -340,24 +352,54 @@ export const useGroupStore = create((set, get) => ({
     });
 
     socket.on("newGroupMessageNotification", (data) => {
-      const { selectedGroup } = get();
+      console.log("📩 Notification received:", data);
+      
+      const { selectedGroup, processedNotifications } = get();
       const { authUser } = useAuthStore.getState();
+      
+      // Create unique notification ID
+      const notificationId = `${data._id || 'no-id'}-${data.groupId}-${data.senderId}-${data.createdAt || Date.now()}`;
+      
+      // Check if already processed
+      if (processedNotifications.has(notificationId)) {
+        console.log("🔄 Duplicate notification ignored:", notificationId);
+        return;
+      }
       
       get().getMyGroupsSilent();
 
       // Filter out messages from current user
       if (data.senderId && data.senderId === authUser._id) {
+        console.log("👤 Own message ignored");
         return;
       }
 
       // Only increment if not currently viewing this group
       if (!selectedGroup || selectedGroup._id !== data.groupId) {
+        console.log("📈 Incrementing unread for group:", data.groupId);
+        
         set((state) => {
+          // Add to processed set
+          const newProcessedNotifications = new Set(state.processedNotifications);
+          newProcessedNotifications.add(notificationId);
+          
+          // Clean up old entries (keep last 100)
+          if (newProcessedNotifications.size > 100) {
+            const entries = Array.from(newProcessedNotifications);
+            entries.slice(0, 50).forEach(id => newProcessedNotifications.delete(id));
+          }
+          
           const newGroupUnreadCounts = { ...state.groupUnreadCounts };
           const groupId = data.groupId;
           newGroupUnreadCounts[groupId] = (newGroupUnreadCounts[groupId] || 0) + 1;
-          return { groupUnreadCounts: newGroupUnreadCounts };
+          
+          return { 
+            groupUnreadCounts: newGroupUnreadCounts,
+            processedNotifications: newProcessedNotifications
+          };
         });
+      } else {
+        console.log("👁️ Currently viewing group, no increment");
       }
     });
   },
@@ -369,6 +411,9 @@ export const useGroupStore = create((set, get) => ({
     socket.off("newGroup");
     socket.off("groupUpdated");
     socket.off("newGroupMessageNotification");
+    
+    set({ isSubscribed: false });
+    console.log("🔌 Unsubscribed from groups");
   },
 
   subscribeToGroupMessages: () => {
