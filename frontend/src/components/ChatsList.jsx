@@ -6,13 +6,14 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { User } from "lucide-react";
 
 const ChatsList = () => {
-  const { getChatPartners, chats, isUsersLoading, setSelectedUser } =
+  const { getChatPartners, chats, isUsersLoading, setSelectedUser, getUnreadCounts, unreadCounts } =
     useChatStore();
   const { onlineUsers } = useAuthStore();
 
   useEffect(() => {
     getChatPartners();
-  }, [getChatPartners]);
+    getUnreadCounts();
+  }, [getChatPartners, getUnreadCounts]);
 
   if (isUsersLoading) return <UsersLoadingSkeleton />;
   if (!Array.isArray(chats) || chats.length === 0) return <NoChatsFound />;
@@ -21,6 +22,7 @@ const ChatsList = () => {
     <>
       {chats.map((chat) => {
         const isOnline = onlineUsers.includes(chat._id);
+        const unreadCount = unreadCounts[chat._id] || 0;
 
         return (
           <div
@@ -38,9 +40,18 @@ const ChatsList = () => {
                   }`}
                 />
               </div>
-              <h4 className="font-medium truncate text-foreground/90">
-                {chat.username}
-              </h4>
+              
+              <div className="flex-1">
+                <h4 className="font-medium truncate text-foreground/90">
+                  {chat.username}
+                </h4>
+              </div>
+
+              {unreadCount > 0 && (
+                <div className="bg-primary text-primary-foreground text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-2">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </div>
+              )}
             </div>
           </div>
         );

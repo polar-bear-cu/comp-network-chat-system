@@ -12,6 +12,7 @@ export const useChatStore = create((set, get) => ({
   isUsersLoading: false,
   isMessagesLoading: false,
   typingUsers: {},
+  unreadCounts: {},
 
   setActiveTab: (tab) => set({ activeTab: tab }),
 
@@ -63,10 +64,41 @@ export const useChatStore = create((set, get) => ({
     try {
       const res = await axiosInstance.get(`/messages/${userId}`);
       set({ messages: res.data });
+      
+      // Remove the unread count for this user since we've read the messages
+      set((state) => {
+        const newUnreadCounts = { ...state.unreadCounts };
+        delete newUnreadCounts[userId];
+        return { unreadCounts: newUnreadCounts };
+      });
     } catch (error) {
       console.error("Error fetching messages:", error);
     } finally {
       set({ isMessagesLoading: false });
+    }
+  },
+
+  getUnreadCounts: async () => {
+    try {
+      const res = await axiosInstance.get("/messages/unread-counts");
+      set({ unreadCounts: res.data });
+    } catch (error) {
+      console.error("Error fetching unread counts:", error);
+    }
+  },
+
+  markMessagesAsRead: async (userId) => {
+    try {
+      await axiosInstance.put(`/messages/mark-read/${userId}`);
+      
+      // Remove the unread count for this user
+      set((state) => {
+        const newUnreadCounts = { ...state.unreadCounts };
+        delete newUnreadCounts[userId];
+        return { unreadCounts: newUnreadCounts };
+      });
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
     }
   },
 
@@ -127,6 +159,7 @@ export const useChatStore = create((set, get) => ({
       messages: [],
       activeTab: "chats",
       typingUsers: {},
+      unreadCounts: {},
     }),
 
   subscribeToMessages: () => {
@@ -143,6 +176,9 @@ export const useChatStore = create((set, get) => ({
 
       const currentMessages = get().messages;
       set({ messages: [...currentMessages, newMessage] });
+      
+      // Mark the new message as read since the user is viewing the chat
+      get().markMessagesAsRead(selectedUser._id);
     });
 
     socket.on("userTyping", ({ senderId }) => {
@@ -154,6 +190,20 @@ export const useChatStore = create((set, get) => ({
       console.log("User stop typing:", senderId);
       get().setTypingUser(senderId, false);
     });
+
+    socket.on("messagesRead", ({ readerId, senderId }) => {
+      const { selectedUser } = get();
+      // Only update if we're currently viewing the conversation where messages were read
+      if (selectedUser && selectedUser._id === readerId) {
+        // Mark all messages sent by the current user to this recipient as read
+        set((state) => ({
+          messages: state.messages.map((msg) => ({
+            ...msg,
+            hasRead: msg.senderId === senderId ? true : msg.hasRead,
+          })),
+        }));
+      }
+    });
   },
 
   unsubscribeFromMessages: () => {
@@ -163,6 +213,7 @@ export const useChatStore = create((set, get) => ({
     socket.off("newMessage");
     socket.off("userTyping");
     socket.off("userStopTyping");
+    socket.off("messagesRead");
   },
 
   subscribeToUsers: () => {
@@ -177,6 +228,21 @@ export const useChatStore = create((set, get) => ({
         set({ allContacts: [newUser, ...currentContacts] });
       }
     });
+
+    // Listen for new messages from any user to update unread counts
+    socket.on("newMessage", (newMessage) => {
+      const { selectedUser } = get();
+      
+      // If the message is not from the currently selected user, increment unread count
+      if (!selectedUser || selectedUser._id !== newMessage.senderId) {
+        set((state) => {
+          const newUnreadCounts = { ...state.unreadCounts };
+          const senderId = newMessage.senderId;
+          newUnreadCounts[senderId] = (newUnreadCounts[senderId] || 0) + 1;
+          return { unreadCounts: newUnreadCounts };
+        });
+      }
+    });
   },
 
   unsubscribeFromUsers: () => {
@@ -184,5 +250,6 @@ export const useChatStore = create((set, get) => ({
     if (!socket) return;
 
     socket.off("newUser");
+    socket.off("newMessage");
   },
 }));
