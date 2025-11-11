@@ -406,12 +406,15 @@ export const useGroupStore = create((set, get) => ({
       
       if (selectedGroup && selectedGroup._id === groupId) {
         set({
-          messages: messages.map(msg => ({
-            ...msg,
-            readBy: msg.readBy && !msg.readBy.includes(userId) 
-              ? [...msg.readBy, userId] 
-              : msg.readBy || [userId]
-          }))
+          messages: messages.map(msg => {
+            const senderId = msg.sender?._id || msg.sender;
+            const readBy = msg.readBy || [];
+            const isAlreadyRead = readBy.some(r => (r._id || r) === userId);
+            
+            if (senderId === userId || isAlreadyRead) return msg;
+            
+            return { ...msg, readBy: [...readBy, userId] };
+          })
         });
       }
     });
