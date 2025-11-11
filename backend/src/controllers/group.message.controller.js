@@ -69,7 +69,8 @@ export async function markGroupMessagesAsRead(req, res) {
       { 
         groupId,
         sender: { $ne: loggedInUserId },
-        readBy: { $nin: [loggedInUserId] }
+        readBy: { $nin: [loggedInUserId] },
+        isSystemMessage: { $ne: true }
       },
       { 
         $addToSet: { readBy: loggedInUserId }
@@ -94,7 +95,8 @@ export async function markAllPreviousMessagesAsRead(groupId, userId) {
       { 
         groupId,
         sender: { $ne: userId },
-        readBy: { $nin: [userId] }
+        readBy: { $nin: [userId] },
+        isSystemMessage: { $ne: true }
       },
       { 
         $addToSet: { readBy: userId }

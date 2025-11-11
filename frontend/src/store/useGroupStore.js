@@ -368,6 +368,8 @@ export const useGroupStore = create((set, get) => ({
 
       const currentMessages = get().messages;
       set({ messages: [...currentMessages, newMessage] });
+      
+      get().markGroupMessagesAsRead(selectedGroup._id);
     });
 
     socket.on("groupUserTyping", ({ groupId, userId, username }) => {

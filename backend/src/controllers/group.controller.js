@@ -152,6 +152,11 @@ export async function joinGroup(req, res) {
       group,
     });
 
+    socketServer.emit("newGroupMessageNotification", {
+      ...systemMessage.toObject(),
+      groupId,
+    });
+
     res.status(200).json(updatedGroup);
   } catch (error) {
     console.error(error);
@@ -207,6 +212,11 @@ export async function leaveGroup(req, res) {
     socketServer.emit("newGroupMessage", {
       ...systemMessage.toObject(),
       group,
+    });
+
+    socketServer.emit("newGroupMessageNotification", {
+      ...systemMessage.toObject(),
+      groupId,
     });
 
     res.status(200).json(updatedGroup);
