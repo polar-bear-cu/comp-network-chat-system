@@ -1,6 +1,5 @@
 import { socketServer } from "../lib/socket.js";
 import GroupMessage from "../model/group.message.model.js";
-import Group from "../model/group.model.js";
 
 export async function getMessagesByGroupId(req, res) {
   try {

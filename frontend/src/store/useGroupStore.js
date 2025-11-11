@@ -335,19 +335,17 @@ export const useGroupStore = create((set, get) => ({
       }
     });
 
-    socket.on("newGroupMessageNotification", (newMessage) => {
+    socket.on("newGroupMessageNotification", (newMessage, groupId, senderId) => {
       const { selectedGroup } = get();
       const { authUser } = useAuthStore.getState();
       
       get().getMyGroupsSilent();
-      
-      // Don't increment unread count for messages sent by the current user
-      if (newMessage.senderId && newMessage.senderId === authUser._id) {
+
+      if (senderId && senderId === authUser._id) {
         return;
       }
 
-      // Don't increment unread count if user is currently viewing this group
-      if (!selectedGroup || selectedGroup._id !== newMessage.groupId) {
+      if (!selectedGroup || selectedGroup._id !== groupId) {
         set((state) => {
           const newGroupUnreadCounts = { ...state.groupUnreadCounts };
           const groupId = newMessage.groupId;

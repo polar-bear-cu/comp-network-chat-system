@@ -63,7 +63,6 @@ const GroupChatContainer = () => {
         ) : messages.length > 0 ? (
           <div className="max-w-3xl mx-auto space-y-6">
             {messages.map((msg) => {
-              console.log("Message: ", msg);
               if (msg.isSystemMessage) {
                 return (
                   <div key={msg._id} className="flex justify-center my-4">
