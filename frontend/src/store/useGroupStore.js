@@ -352,38 +352,22 @@ export const useGroupStore = create((set, get) => ({
     });
 
     socket.on("newGroupMessageNotification", (data) => {
-      console.log("📩 Notification received:", data);
-      
       const { selectedGroup, processedNotifications } = get();
       const { authUser } = useAuthStore.getState();
       
-      // Create unique notification ID
       const notificationId = `${data._id || 'no-id'}-${data.groupId}-${data.senderId}-${data.createdAt || Date.now()}`;
       
-      // Check if already processed
-      if (processedNotifications.has(notificationId)) {
-        console.log("🔄 Duplicate notification ignored:", notificationId);
-        return;
-      }
+      if (processedNotifications.has(notificationId)) return;
       
       get().getMyGroupsSilent();
 
-      // Filter out messages from current user
-      if (data.senderId && data.senderId === authUser._id) {
-        console.log("👤 Own message ignored");
-        return;
-      }
+      if (data.senderId && data.senderId === authUser._id) return;
 
-      // Only increment if not currently viewing this group
       if (!selectedGroup || selectedGroup._id !== data.groupId) {
-        console.log("📈 Incrementing unread for group:", data.groupId);
-        
         set((state) => {
-          // Add to processed set
           const newProcessedNotifications = new Set(state.processedNotifications);
           newProcessedNotifications.add(notificationId);
           
-          // Clean up old entries (keep last 100)
           if (newProcessedNotifications.size > 100) {
             const entries = Array.from(newProcessedNotifications);
             entries.slice(0, 50).forEach(id => newProcessedNotifications.delete(id));
@@ -398,8 +382,6 @@ export const useGroupStore = create((set, get) => ({
             processedNotifications: newProcessedNotifications
           };
         });
-      } else {
-        console.log("👁️ Currently viewing group, no increment");
       }
     });
   },
@@ -413,7 +395,7 @@ export const useGroupStore = create((set, get) => ({
     socket.off("newGroupMessageNotification");
     
     set({ isSubscribed: false });
-    console.log("🔌 Unsubscribed from groups");
+
   },
 
   subscribeToGroupMessages: () => {
