@@ -18,12 +18,18 @@ export async function getMyGroups(req, res) {
   try {
     const loggedInUserId = req.user._id;
     
-    const myGroups = await Group.find({
-      members: { $in: [loggedInUserId] }
-    })
-      .populate("owner", "username")
-      .populate("members", "username")
-      .sort({ updatedAt: -1 }); // Sort by most recently updated
+    const myGroups = await Group.aggregate([
+      { $match: { members: { $in: [loggedInUserId] } } },
+      { $lookup: { from: "groupmessages", localField: "_id", foreignField: "groupId", as: "messages" } },
+      { $addFields: { lastMessageTime: { $max: "$messages.createdAt" } } },
+      { $sort: { lastMessageTime: -1, updatedAt: -1 } },
+      { $project: { messages: 0 } }
+    ]);
+
+    await Group.populate(myGroups, [
+      { path: "owner", select: "username" },
+      { path: "members", select: "username" }
+    ]);
 
     res.status(200).json(myGroups);
   } catch (error) {

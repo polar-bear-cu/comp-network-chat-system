@@ -62,8 +62,7 @@ function MessageInput() {
     if (selectedUser) {
       messageSent = await sendMessage(text);
     } else if (selectedGroup) {
-      sendGroupMessage(text);
-      messageSent = true; // Group messages don't have rate limiting yet
+      messageSent = await sendGroupMessage(text);
     }
     
     if (messageSent) {

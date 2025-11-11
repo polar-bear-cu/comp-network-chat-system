@@ -15,6 +15,7 @@ export const useGroupStore = create((set, get) => ({
   isAvailableGroupsLoading: false,
   openCreateGroupPopup: false,
   groupTypingUsers: {},
+  groupMessageCooldowns: {},
 
   setOpenCreateGroupPopup: (open) => set({ openCreateGroupPopup: open }),
 
@@ -81,6 +82,15 @@ export const useGroupStore = create((set, get) => ({
       console.error("Error fetching available groups:", error);
     } finally {
       set({ isAvailableGroupsLoading: false });
+    }
+  },
+
+  getMyGroupsSilent: async () => {
+    try {
+      const res = await axiosInstance.get("/groups/my-groups");
+      set({ myGroups: res.data });
+    } catch (error) {
+      console.error("Error fetching my groups silently:", error);
     }
   },
 
@@ -210,14 +220,57 @@ export const useGroupStore = create((set, get) => ({
 
   sendGroupMessage: async (text) => {
     try {
-      const { selectedGroup, messages } = get();
+      const { selectedGroup, messages, groupMessageCooldowns } = get();
+      const groupId = selectedGroup._id;
+      const now = Date.now();
+      
+      const groupCooldown = groupMessageCooldowns[groupId];
+      const canSend = !groupCooldown || groupCooldown.canSend;
+      const lastSentTime = groupCooldown?.lastSentTime || 0;
+      
+      if (!canSend || (now - lastSentTime) < 1000) {
+        console.log(`Frontend rate limit: Message queued for group ${groupId}`);
+        return false;
+      }
+      
       const res = await axiosInstance.post(
         `/groups/${selectedGroup._id}/send`,
         { text }
       );
-      set({ messages: [...messages, res.data] });
+      
+      set({ 
+        messages: [...messages, res.data],
+        groupMessageCooldowns: {
+          ...groupMessageCooldowns,
+          [groupId]: {
+            canSend: false,
+            lastSentTime: now
+          }
+        }
+      });
+      
+      setTimeout(() => {
+        set((state) => ({
+          groupMessageCooldowns: {
+            ...state.groupMessageCooldowns,
+            [groupId]: {
+              ...state.groupMessageCooldowns[groupId],
+              canSend: true
+            }
+          }
+        }));
+      }, 1000);
+
+      get().getMyGroupsSilent();
+      return true;
     } catch (error) {
+      if (error.response?.status === 429) {
+        console.log("Backend rate limit: Group message queued");
+        return false;
+      }
+      
       console.error("Error sending group message:", error);
+      return false;
     }
   },
 
@@ -235,6 +288,9 @@ export const useGroupStore = create((set, get) => ({
     });
 
     socket.on("groupUpdated", (updatedGroup) => {
+      get().getMyGroupsSilent();
+      get().getAvailableGroups();
+      
       const currentGroups = get().allGroups;
       const updatedGroups = currentGroups.map((g) =>
         g._id === updatedGroup._id ? updatedGroup : g
@@ -265,6 +321,9 @@ export const useGroupStore = create((set, get) => ({
 
     socket.on("newGroupMessage", (newMessage) => {
       const isMessageForCurrentGroup = newMessage.groupId === selectedGroup._id;
+      
+      get().getMyGroupsSilent();
+      
       if (!isMessageForCurrentGroup) return;
 
       const currentMessages = get().messages;
