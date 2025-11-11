@@ -16,6 +16,7 @@ export const useGroupStore = create((set, get) => ({
   openCreateGroupPopup: false,
   groupTypingUsers: {},
   groupMessageCooldowns: {},
+  groupUnreadCounts: {},
 
   setOpenCreateGroupPopup: (open) => set({ openCreateGroupPopup: open }),
 
@@ -44,6 +45,8 @@ export const useGroupStore = create((set, get) => ({
       if (socket && socket.connected) {
         socket.emit("joinGroup", { groupId: group._id });
       }
+      
+      get().markGroupMessagesAsRead(group._id);
     }
   },
 
@@ -59,7 +62,6 @@ export const useGroupStore = create((set, get) => ({
     }
   },
 
-  // Get groups that user has joined
   getMyGroups: async () => {
     set({ isMyGroupsLoading: true });
     try {
@@ -72,7 +74,6 @@ export const useGroupStore = create((set, get) => ({
     }
   },
 
-  // Get groups that user can join
   getAvailableGroups: async () => {
     set({ isAvailableGroupsLoading: true });
     try {
@@ -167,6 +168,29 @@ export const useGroupStore = create((set, get) => ({
       console.error("Error fetching group messages:", error);
     } finally {
       set({ isMessagesLoading: false });
+    }
+  },
+
+  getGroupUnreadCounts: async () => {
+    try {
+      const res = await axiosInstance.get("/groups/unread-counts");
+      set({ groupUnreadCounts: res.data });
+    } catch (error) {
+      console.error("Error fetching group unread counts:", error);
+    }
+  },
+
+  markGroupMessagesAsRead: async (groupId) => {
+    try {
+      await axiosInstance.put(`/groups/${groupId}/mark-read`);
+      
+      set((state) => {
+        const newGroupUnreadCounts = { ...state.groupUnreadCounts };
+        delete newGroupUnreadCounts[groupId];
+        return { groupUnreadCounts: newGroupUnreadCounts };
+      });
+    } catch (error) {
+      console.error("Error marking group messages as read:", error);
     }
   },
 
@@ -302,6 +326,21 @@ export const useGroupStore = create((set, get) => ({
         set({ selectedGroup: updatedGroup });
       }
     });
+
+    socket.on("newGroupMessageNotification", (newMessage) => {
+      const { selectedGroup } = get();
+      
+      get().getMyGroupsSilent();
+      
+      if (!selectedGroup || selectedGroup._id !== newMessage.groupId) {
+        set((state) => {
+          const newGroupUnreadCounts = { ...state.groupUnreadCounts };
+          const groupId = newMessage.groupId;
+          newGroupUnreadCounts[groupId] = (newGroupUnreadCounts[groupId] || 0) + 1;
+          return { groupUnreadCounts: newGroupUnreadCounts };
+        });
+      }
+    });
   },
 
   unsubscribeFromGroups: () => {
@@ -310,6 +349,7 @@ export const useGroupStore = create((set, get) => ({
 
     socket.off("newGroup");
     socket.off("groupUpdated");
+    socket.off("newGroupMessageNotification");
   },
 
   subscribeToGroupMessages: () => {
@@ -339,6 +379,21 @@ export const useGroupStore = create((set, get) => ({
       console.log("Group user stop typing:", groupId, userId);
       get().setGroupTypingUser(groupId, userId, null, false);
     });
+
+    socket.on("groupMessagesRead", ({ groupId, userId }) => {
+      const { selectedGroup, messages } = get();
+      
+      if (selectedGroup && selectedGroup._id === groupId) {
+        set({
+          messages: messages.map(msg => ({
+            ...msg,
+            readBy: msg.readBy && !msg.readBy.includes(userId) 
+              ? [...msg.readBy, userId] 
+              : msg.readBy || [userId]
+          }))
+        });
+      }
+    });
   },
 
   unsubscribeFromGroupMessages: () => {
@@ -348,5 +403,6 @@ export const useGroupStore = create((set, get) => ({
     socket.off("newGroupMessage");
     socket.off("groupUserTyping");
     socket.off("groupUserStopTyping");
+    socket.off("groupMessagesRead");
   },
 }));

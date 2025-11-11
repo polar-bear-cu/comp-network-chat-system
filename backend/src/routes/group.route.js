@@ -9,10 +9,12 @@ import {
   getGroupById,
   joinGroup,
   leaveGroup,
+  getGroupUnreadCounts,
 } from "../controllers/group.controller.js";
 import {
   getMessagesByGroupId,
   sendGroupMessage,
+  markGroupMessagesAsRead,
 } from "../controllers/group.message.controller.js";
 
 const router = express.Router();
@@ -33,6 +35,7 @@ const groupMessageRateLimit = rateLimit({
 router.get("/", getAllGroups);
 router.get("/my-groups", getMyGroups);
 router.get("/available", getAvailableGroups);
+router.get("/unread-counts", getGroupUnreadCounts);
 router.get("/:id", getGroupById);
 router.get("/:id/messages", getMessagesByGroupId);
 
@@ -40,5 +43,7 @@ router.post("/", createGroup);
 router.post("/:id/join", joinGroup);
 router.post("/:id/send", groupMessageRateLimit, sendGroupMessage);
 router.post("/:id/leave", leaveGroup);
+
+router.put("/:id/mark-read", markGroupMessagesAsRead);
 
 export default router;

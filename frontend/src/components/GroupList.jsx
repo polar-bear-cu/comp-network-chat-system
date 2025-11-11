@@ -15,7 +15,9 @@ const GroupList = () => {
     setSelectedGroup, 
     isMyGroupsLoading, 
     isAvailableGroupsLoading,
-    joinGroup
+    joinGroup,
+    getGroupUnreadCounts,
+    groupUnreadCounts
   } = useGroupStore();
 
   const [activeTab, setActiveTab] = useState("my-groups");
@@ -23,7 +25,8 @@ const GroupList = () => {
   useEffect(() => {
     getMyGroups();
     getAvailableGroups();
-  }, [getMyGroups, getAvailableGroups]);
+    getGroupUnreadCounts();
+  }, [getMyGroups, getAvailableGroups, getGroupUnreadCounts]);
 
   const handleJoinGroup = async (e, groupId) => {
     e.stopPropagation();
@@ -35,43 +38,54 @@ const GroupList = () => {
     }
   };
 
-  const renderGroupItem = (group, showJoinButton = false) => (
-    <div
-      key={group._id}
-      className="p-4 rounded-lg cursor-pointer bg-muted/30 border border-border hover:bg-muted/50 transition-colors"
-      onClick={() => !showJoinButton && setSelectedGroup(group)}
-    >
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full relative bg-muted flex items-center justify-center border border-border">
-          <Users className="w-8 h-8 text-primary" />
-        </div>
-        <div className="flex flex-col flex-1">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <h4 className="font-medium truncate text-foreground/90">
-                {group.name}
-              </h4>
-              {!showJoinButton && (
-                <Check className="w-4 h-4 text-primary shrink-0" />
-              )}
-            </div>
-            {showJoinButton && (
-              <button
-                onClick={(e) => handleJoinGroup(e, group._id)}
-                className="ml-2 p-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                title="Join Group"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            )}
+  const renderGroupItem = (group, showJoinButton = false) => {
+    const unreadCount = groupUnreadCounts[group._id] || 0;
+    
+    return (
+      <div
+        key={group._id}
+        className="p-4 rounded-lg cursor-pointer bg-muted/30 border border-border hover:bg-muted/50 transition-colors"
+        onClick={() => !showJoinButton && setSelectedGroup(group)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full relative bg-muted flex items-center justify-center border border-border">
+            <Users className="w-8 h-8 text-primary" />
           </div>
-          <p className="text-sm truncate text-foreground/60">
-            By {group.owner.username} • {group.members?.length || 0} members
-          </p>
+          <div className="flex flex-col flex-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <h4 className="font-medium truncate text-foreground/90">
+                  {group.name}
+                </h4>
+                {!showJoinButton && (
+                  <Check className="w-4 h-4 text-primary shrink-0" />
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {!showJoinButton && unreadCount > 0 && (
+                  <div className="bg-primary text-primary-foreground text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-2">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </div>
+                )}
+                {showJoinButton && (
+                  <button
+                    onClick={(e) => handleJoinGroup(e, group._id)}
+                    className="p-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                    title="Join Group"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <p className="text-sm truncate text-foreground/60">
+              By {group.owner.username} • {group.members?.length || 0} members
+            </p>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-4">

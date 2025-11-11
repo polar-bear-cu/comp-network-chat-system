@@ -1,6 +1,7 @@
 import { socketServer } from "../lib/socket.js";
 import GroupMessage from "../model/group.message.model.js";
 import Group from "../model/group.model.js";
+import { markAllPreviousMessagesAsRead } from "./group.message.controller.js";
 
 export async function getAllGroups(req, res) {
   try {
@@ -143,6 +144,8 @@ export async function joinGroup(req, res) {
     });
     await systemMessage.save();
 
+    await markAllPreviousMessagesAsRead(groupId, loggedInUserId);
+
     socketServer.emit("groupUpdated", updatedGroup);
     socketServer.emit("newGroupMessage", {
       ...systemMessage.toObject(),
@@ -209,5 +212,33 @@ export async function leaveGroup(req, res) {
     res.status(200).json(updatedGroup);
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export async function getGroupUnreadCounts(req, res) {
+  try {
+    const loggedInUserId = req.user._id;
+
+    const unreadMessages = await GroupMessage.find({
+      sender: { $ne: loggedInUserId },
+      readBy: { $nin: [loggedInUserId] },
+    }).populate({
+      path: 'groupId',
+      select: 'members',
+      match: { members: { $in: [loggedInUserId] } }
+    });
+
+    const groupUnreadCounts = {};
+    unreadMessages.forEach((message) => {
+      if (message.groupId) {
+        const groupId = message.groupId._id.toString();
+        groupUnreadCounts[groupId] = (groupUnreadCounts[groupId] || 0) + 1;
+      }
+    });
+
+    res.status(200).json(groupUnreadCounts);
+  } catch (error) {
+    console.error("Error fetching group unread counts:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 }

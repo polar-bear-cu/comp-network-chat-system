@@ -82,28 +82,32 @@ const GroupChatContainer = () => {
               }
               const isMe = msg.sender._id === authUser._id;
               return (
-                <div
-                  key={msg._id}
-                  className={`flex flex-col ${
-                    isMe ? "items-end" : "items-start"
-                  }`}
-                >
+                <div key={msg._id}>
                   {!isMe && msg.sender?.username && (
                     <p className="text-xs text-muted-foreground mb-1">
                       {msg.sender.username}
                     </p>
                   )}
                   <div
-                    className={`relative rounded-lg p-4 border border-border max-w-[75%] whitespace-pre-wrap wrap-break-word shadow-sm ${
-                      isMe
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-card text-card-foreground"
-                    }`}
+                    className={`flex items-end gap-2 ${isMe ? "justify-end" : "justify-start"}`}
                   >
-                    {msg.text && <p>{msg.text}</p>}
-                    <p className="text-xs mt-1 opacity-70 text-foreground">
-                      {formatMessageTime(msg.createdAt)}
-                    </p>
+                    {isMe && msg.readBy && msg.readBy.length > 0 && (
+                      <p className="text-xs opacity-70 text-muted-foreground mb-1">
+                        Read {msg.readBy.length}
+                      </p>
+                    )}
+                    <div
+                      className={`relative rounded-lg p-4 border border-border max-w-[75%] whitespace-pre-wrap wrap-break-word shadow-sm ${
+                        isMe
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-card text-card-foreground"
+                      }`}
+                    >
+                      {msg.text && <p>{msg.text}</p>}
+                      <p className="text-xs opacity-70 text-foreground mt-1">
+                        {formatMessageTime(msg.createdAt)}
+                      </p>
+                    </div>
                   </div>
                 </div>
               );
