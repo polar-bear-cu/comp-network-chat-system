@@ -1,5 +1,6 @@
 import { socketServer } from "../lib/socket.js";
 import GroupMessage from "../model/group.message.model.js";
+import Group from "../model/group.model.js";
 
 export async function getMessagesByGroupId(req, res) {
   try {
@@ -10,6 +11,7 @@ export async function getMessagesByGroupId(req, res) {
 
     const messages = await GroupMessage.find({ groupId })
       .populate("sender", "username")
+      .populate("readBy", "username")
       .sort({ createdAt: 1 });
 
     res.status(200).json(messages);
@@ -47,6 +49,7 @@ export async function sendGroupMessage(req, res) {
     socketServer.emit("newGroupMessageNotification", {
       ...newMessage.toObject(),
       groupId,
+      senderId: loggedInUserId,
     });
 
     res.status(201).json(newMessage);
@@ -69,8 +72,7 @@ export async function markGroupMessagesAsRead(req, res) {
       { 
         groupId,
         sender: { $ne: loggedInUserId },
-        readBy: { $nin: [loggedInUserId] },
-        isSystemMessage: { $ne: true }
+        readBy: { $nin: [loggedInUserId] }
       },
       { 
         $addToSet: { readBy: loggedInUserId }
@@ -95,8 +97,7 @@ export async function markAllPreviousMessagesAsRead(groupId, userId) {
       { 
         groupId,
         sender: { $ne: userId },
-        readBy: { $nin: [userId] },
-        isSystemMessage: { $ne: true }
+        readBy: { $nin: [userId] }
       },
       { 
         $addToSet: { readBy: userId }

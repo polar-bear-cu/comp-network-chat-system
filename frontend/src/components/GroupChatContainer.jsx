@@ -93,7 +93,7 @@ const GroupChatContainer = () => {
                   >
                     {isMe && msg.readBy && msg.readBy.length > 0 && (
                       <p className="text-xs opacity-70 text-muted-foreground mb-1">
-                        Read {msg.readBy.length}
+                        Read {msg.readBy.length}, {msg.readBy.map(user => user.username || user).join(", ")}
                       </p>
                     )}
                     <div

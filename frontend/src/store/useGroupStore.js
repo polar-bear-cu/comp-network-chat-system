@@ -329,9 +329,14 @@ export const useGroupStore = create((set, get) => ({
 
     socket.on("newGroupMessageNotification", (newMessage) => {
       const { selectedGroup } = get();
+      const { authUser } = useAuthStore.getState();
       
       get().getMyGroupsSilent();
       
+      if (newMessage.senderId && newMessage.senderId === authUser._id) {
+        return;
+      }
+
       if (!selectedGroup || selectedGroup._id !== newMessage.groupId) {
         set((state) => {
           const newGroupUnreadCounts = { ...state.groupUnreadCounts };
@@ -360,6 +365,7 @@ export const useGroupStore = create((set, get) => ({
     if (!socket) return;
 
     socket.on("newGroupMessage", (newMessage) => {
+      const { selectedGroup } = get();
       const isMessageForCurrentGroup = newMessage.groupId === selectedGroup._id;
       
       get().getMyGroupsSilent();

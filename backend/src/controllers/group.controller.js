@@ -155,6 +155,7 @@ export async function joinGroup(req, res) {
     socketServer.emit("newGroupMessageNotification", {
       ...systemMessage.toObject(),
       groupId,
+      senderId: loggedInUserId,
     });
 
     res.status(200).json(updatedGroup);
@@ -217,6 +218,7 @@ export async function leaveGroup(req, res) {
     socketServer.emit("newGroupMessageNotification", {
       ...systemMessage.toObject(),
       groupId,
+      senderId: loggedInUserId,
     });
 
     res.status(200).json(updatedGroup);
@@ -231,7 +233,7 @@ export async function getGroupUnreadCounts(req, res) {
 
     const unreadMessages = await GroupMessage.find({
       sender: { $ne: loggedInUserId },
-      readBy: { $nin: [loggedInUserId] },
+      readBy: { $nin: [loggedInUserId] }
     }).populate({
       path: 'groupId',
       select: 'members',
