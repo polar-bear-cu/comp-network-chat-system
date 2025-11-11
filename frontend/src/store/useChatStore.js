@@ -229,11 +229,11 @@ export const useChatStore = create((set, get) => ({
       }
     });
 
-    // Listen for new messages from any user to update unread counts
-    socket.on("newMessage", (newMessage) => {
+    // Global listener for unread count updates - works independent of selected user
+    socket.on("newMessageNotification", (newMessage) => {
       const { selectedUser } = get();
       
-      // If the message is not from the currently selected user, increment unread count
+      // Only increment unread count if message is NOT from currently selected user
       if (!selectedUser || selectedUser._id !== newMessage.senderId) {
         set((state) => {
           const newUnreadCounts = { ...state.unreadCounts };
@@ -241,6 +241,9 @@ export const useChatStore = create((set, get) => ({
           newUnreadCounts[senderId] = (newUnreadCounts[senderId] || 0) + 1;
           return { unreadCounts: newUnreadCounts };
         });
+        
+        // Refresh chat partners to update order
+        get().getChatPartners();
       }
     });
   },
@@ -250,6 +253,6 @@ export const useChatStore = create((set, get) => ({
     if (!socket) return;
 
     socket.off("newUser");
-    socket.off("newMessage");
+    socket.off("newMessageNotification");
   },
 }));

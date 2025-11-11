@@ -77,7 +77,11 @@ export async function sendMessage(req, res) {
 
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
+      // Send the message to receiver for active chat
       socketServer.to(receiverSocketId).emit("newMessage", newMessage);
+      
+      // Send notification for unread count (always sent regardless of active chat)
+      socketServer.to(receiverSocketId).emit("newMessageNotification", newMessage);
     }
 
     res.status(201).json(newMessage);
@@ -137,7 +141,7 @@ export async function markMessagesAsRead(req, res) {
     const loggedInUserId = req.user._id;
     const otherUserId = req.params.id;
 
-    await Message.updateMany(
+    const updateResult = await Message.updateMany(
       {
         senderId: otherUserId,
         receiverId: loggedInUserId,
@@ -147,6 +151,17 @@ export async function markMessagesAsRead(req, res) {
         hasRead: true,
       }
     );
+
+    // If any messages were marked as read, notify the sender
+    if (updateResult.modifiedCount > 0) {
+      const senderSocketId = getReceiverSocketId(otherUserId);
+      if (senderSocketId) {
+        socketServer.to(senderSocketId).emit("messagesRead", {
+          readerId: loggedInUserId,
+          senderId: otherUserId,
+        });
+      }
+    }
 
     res.status(200).json({ message: "Messages marked as read" });
   } catch (error) {
