@@ -46,7 +46,7 @@ const ChatContainer = () => {
       <ChatHeader />
       <div className="flex-1 px-6 overflow-y-auto py-8 bg-transparent">
         {messages.length > 0 && !isMessagesLoading ? (
-          <div className="max-w-3xl mx-auto space-y-6">
+          <div className="max-w-3xl mx-auto space-y-3">
             {messages.map((msg) => {
               const isMe = msg.senderId === authUser._id;
               return (
@@ -63,10 +63,10 @@ const ChatContainer = () => {
                       </div>
                     )}
                     <div
-                      className={`relative rounded-lg p-3 border border-border max-w-[75%] whitespace-pre-wrap wrap-break-word shadow-sm ${
+                      className={`relative p-3 border border-border max-w-[75%] whitespace-pre-wrap wrap-break-word shadow-sm ${
                         isMe
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-card text-card-foreground"
+                          ? "bg-primary text-primary-foreground rounded-lg rounded-tr-none"
+                          : "bg-card text-card-foreground rounded-lg rounded-tl-none"
                       }`}
                     >
                       {msg.text && <p>{msg.text}</p>}

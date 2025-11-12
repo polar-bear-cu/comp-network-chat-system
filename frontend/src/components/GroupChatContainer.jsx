@@ -61,8 +61,8 @@ const GroupChatContainer = () => {
         ) : isMessagesLoading ? (
           <MessagesLoadingSkeleton />
         ) : messages.length > 0 ? (
-          <div className="max-w-3xl mx-auto space-y-6">
-            {messages.map((msg) => {
+          <div className="max-w-3xl mx-auto space-y-3">
+            {messages.map((msg, index) => {
               if (msg.isSystemMessage) {
                 return (
                   <div key={msg._id} className="flex justify-center my-4">
@@ -80,10 +80,23 @@ const GroupChatContainer = () => {
                   </div>
                 );
               }
+              
               const isMe = msg.sender._id === authUser._id;
+              
+              const prevMsg = messages[index - 1];
+              const timeDiff = prevMsg ? new Date(msg.createdAt) - new Date(prevMsg.createdAt) : null;
+              const isMoreThan3Minutes = timeDiff ? timeDiff > 3 * 60 * 1000 : false;
+              
+              const showUsername = !isMe && msg.sender?.username && (
+                !prevMsg || 
+                prevMsg.isSystemMessage || 
+                prevMsg.sender?._id !== msg.sender._id ||
+                isMoreThan3Minutes
+              );
+              
               return (
                 <div key={msg._id}>
-                  {!isMe && msg.sender?.username && (
+                  {showUsername && (
                     <p className="text-xs text-muted-foreground mb-1">
                       {msg.sender.username}
                     </p>
@@ -102,10 +115,10 @@ const GroupChatContainer = () => {
                       </div>
                     )}
                     <div
-                      className={`relative rounded-lg p-3 border border-border max-w-[75%] whitespace-pre-wrap wrap-break-word shadow-sm ${
+                      className={`relative p-3 border border-border max-w-[75%] whitespace-pre-wrap wrap-break-word shadow-sm ${
                         isMe
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-card text-card-foreground"
+                          ? "bg-primary text-primary-foreground rounded-lg rounded-tr-none"
+                          : "bg-card text-card-foreground rounded-lg rounded-tl-none"
                       }`}
                     >
                       {msg.text && <p>{msg.text}</p>}
