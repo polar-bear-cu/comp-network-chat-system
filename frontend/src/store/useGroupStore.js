@@ -17,7 +17,7 @@ export const useGroupStore = create((set, get) => ({
   groupTypingUsers: {},
   groupMessageCooldowns: {},
   groupUnreadCounts: {},
-  processedNotifications: new Set(), // Track processed notification IDs
+  processedNotifications: new Set(), // Track processed notification IDs 
   isSubscribed: false, // Track subscription state
 
   setOpenCreateGroupPopup: (open) => set({ openCreateGroupPopup: open }),
