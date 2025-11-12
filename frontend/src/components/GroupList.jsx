@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useGroupStore } from "@/store/useGroupStore";
-import NoGroupFound from "./NoGroupFound";
+import { useChatStore } from "@/store/useChatStore";
 import UsersLoadingSkeleton from "./UserLoadingSkeleton";
 import { Check, Users, Plus } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const GroupList = () => {
   const { authUser } = useAuthStore();
+  const { setActiveTab: setGlobalActiveTab } = useChatStore();
   const { 
     getMyGroups, 
     getAvailableGroups, 
@@ -32,7 +33,9 @@ const GroupList = () => {
     e.stopPropagation();
     const result = await joinGroup(groupId);
     if (result.success) {
-      console.log("Successfully joined group!");
+      setActiveTab("my-groups");
+      setGlobalActiveTab("groups");
+      setSelectedGroup(result.group);
     } else {
       console.error("Failed to join group:", result.message);
     }

@@ -54,23 +54,28 @@ const ChatContainer = () => {
                   <div
                     className={`flex items-end gap-2 ${isMe ? "justify-end" : "justify-start"}`}
                   >
-                    {isMe && msg.hasRead && (
-                      <p className="text-xs opacity-70 text-muted-foreground mb-1">
-                        Read
-                      </p>
+                    {isMe && (
+                      <div className="flex flex-col text-xs opacity-70 text-muted-foreground">
+                        {msg.hasRead && (
+                          <p className="mb-0 text-right">Read</p>
+                        )}
+                        <p className="mb-1 text-left">{formatMessageTime(msg.createdAt)}</p>
+                      </div>
                     )}
                     <div
-                      className={`relative rounded-lg p-4 border border-border max-w-[75%] whitespace-pre-wrap wrap-break-word shadow-sm ${
+                      className={`relative rounded-lg p-3 border border-border max-w-[75%] whitespace-pre-wrap wrap-break-word shadow-sm ${
                         isMe
                           ? "bg-primary text-primary-foreground"
                           : "bg-card text-card-foreground"
                       }`}
                     >
                       {msg.text && <p>{msg.text}</p>}
-                      <p className="text-xs opacity-70 text-foreground mt-1">
-                        {formatMessageTime(msg.createdAt)}
-                      </p>
                     </div>
+                    {!isMe && (
+                      <div className="flex flex-col text-xs opacity-70 text-muted-foreground">
+                        <p className="mb-1 text-left">{formatMessageTime(msg.createdAt)}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
