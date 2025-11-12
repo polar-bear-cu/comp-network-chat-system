@@ -61,7 +61,6 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
-  // Background sync without showing loading to user
   getChatPartnersSilent: async () => {
     try {
       const res = await axiosInstance.get("/messages/chats");
@@ -77,7 +76,6 @@ export const useChatStore = create((set, get) => ({
       const res = await axiosInstance.get(`/messages/${userId}`);
       set({ messages: res.data });
       
-      // Remove the unread count for this user since we've read the messages
       set((state) => {
         const newUnreadCounts = { ...state.unreadCounts };
         delete newUnreadCounts[userId];
@@ -103,7 +101,6 @@ export const useChatStore = create((set, get) => ({
     try {
       await axiosInstance.put(`/messages/mark-read/${userId}`);
       
-      // Remove the unread count for this user
       set((state) => {
         const newUnreadCounts = { ...state.unreadCounts };
         delete newUnreadCounts[userId];
@@ -215,7 +212,6 @@ export const useChatStore = create((set, get) => ({
       const currentMessages = get().messages;
       set({ messages: [...currentMessages, newMessage] });
       
-      // Mark the new message as read since the user is viewing the chat
       get().markMessagesAsRead(selectedUser._id);
     });
 
@@ -231,9 +227,7 @@ export const useChatStore = create((set, get) => ({
 
     socket.on("messagesRead", ({ readerId, senderId }) => {
       const { selectedUser } = get();
-      // Only update if we're currently viewing the conversation where messages were read
       if (selectedUser && selectedUser._id === readerId) {
-        // Mark all messages sent by the current user to this recipient as read
         set((state) => ({
           messages: state.messages.map((msg) => ({
             ...msg,
@@ -267,14 +261,11 @@ export const useChatStore = create((set, get) => ({
       }
     });
 
-    // Global listener for unread count updates - works independent of selected user
     socket.on("newMessageNotification", (newMessage) => {
       const { selectedUser } = get();
       
-      // Silent background sync to update chat order - no loading shown to user
       get().getChatPartnersSilent();
       
-      // Only increment unread count if message is NOT from currently selected user
       if (!selectedUser || selectedUser._id !== newMessage.senderId) {
         set((state) => {
           const newUnreadCounts = { ...state.unreadCounts };

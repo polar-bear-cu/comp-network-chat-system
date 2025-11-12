@@ -264,7 +264,6 @@ export const useGroupStore = create((set, get) => ({
         { text }
       );
       
-      // Add message locally for immediate feedback, socket will handle for others
       set({ 
         messages: [...messages, res.data],
         groupMessageCooldowns: {
@@ -305,14 +304,12 @@ export const useGroupStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
 
-    // Prevent multiple subscriptions
     const { isSubscribed } = get();
     if (isSubscribed) {
       console.log("Groups already subscribed, skipping...");
       return;
     }
 
-    // Clean up existing listeners
     socket.off("newGroup");
     socket.off("groupUpdated");
     socket.off("newGroupMessageNotification");
@@ -405,7 +402,6 @@ export const useGroupStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
 
-    // Remove existing listeners to prevent duplicates
     socket.off("newGroupMessage");
     socket.off("groupUserTyping");
     socket.off("groupUserStopTyping");
@@ -421,7 +417,6 @@ export const useGroupStore = create((set, get) => ({
 
       const currentMessages = get().messages;
       
-      // Check if message already exists to prevent duplicates
       const messageExists = currentMessages.some(msg => msg._id === newMessage._id);
       if (!messageExists) {
         set({ messages: [...currentMessages, newMessage] });

@@ -21,7 +21,6 @@ export async function getMessagesByUserId(req, res) {
     const loggedInUserId = req.user._id;
     const otherUserId = req.params.id;
 
-    // Mark messages as read and get the updated messages
     const updateResult = await Message.updateMany(
       {
         senderId: otherUserId,
@@ -33,7 +32,6 @@ export async function getMessagesByUserId(req, res) {
       }
     );
 
-    // If any messages were marked as read, notify the sender via socket
     if (updateResult.modifiedCount > 0) {
       const senderSocketId = getReceiverSocketId(otherUserId);
       if (senderSocketId) {
@@ -77,10 +75,7 @@ export async function sendMessage(req, res) {
 
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
-      // Send the message to receiver for active chat
       socketServer.to(receiverSocketId).emit("newMessage", newMessage);
-      
-      // Send notification for unread count (always sent regardless of active chat)
       socketServer.to(receiverSocketId).emit("newMessageNotification", newMessage);
     }
 
@@ -101,9 +96,8 @@ export async function getChatPartners(req, res) {
         },
         { receiverId: loggedInUserId },
       ],
-    }).sort({ createdAt: -1 }); // Sort messages by newest first
+    }).sort({ createdAt: -1 });
     
-    // Create a map to track the last message time for each chat partner
     const chatPartnersMap = new Map();
     
     messages.forEach((msg) => {
@@ -111,7 +105,6 @@ export async function getChatPartners(req, res) {
         ? msg.receiverId.toString()
         : msg.senderId.toString();
       
-      // Only add if we haven't seen this partner yet (since messages are sorted by newest first)
       if (!chatPartnersMap.has(chatPartnerId)) {
         chatPartnersMap.set(chatPartnerId, msg.createdAt);
       }
@@ -122,11 +115,10 @@ export async function getChatPartners(req, res) {
       _id: { $in: chatPartnersId },
     }).select("-password");
 
-    // Sort chat partners by their last message time
     chatPartners.sort((a, b) => {
       const timeA = chatPartnersMap.get(a._id.toString());
       const timeB = chatPartnersMap.get(b._id.toString());
-      return new Date(timeB) - new Date(timeA); // Newest first
+      return new Date(timeB) - new Date(timeA);
     });
 
     res.status(200).json(chatPartners);
@@ -152,7 +144,6 @@ export async function markMessagesAsRead(req, res) {
       }
     );
 
-    // If any messages were marked as read, notify the sender
     if (updateResult.modifiedCount > 0) {
       const senderSocketId = getReceiverSocketId(otherUserId);
       if (senderSocketId) {

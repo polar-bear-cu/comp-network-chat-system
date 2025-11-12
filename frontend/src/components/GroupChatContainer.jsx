@@ -61,7 +61,7 @@ const GroupChatContainer = () => {
         ) : isMessagesLoading ? (
           <MessagesLoadingSkeleton />
         ) : messages.length > 0 ? (
-          <div className="max-w-3xl mx-auto space-y-3">
+          <div className="max-w-3xl mx-auto space-y-2">
             {messages.map((msg, index) => {
               if (msg.isSystemMessage) {
                 return (
@@ -117,8 +117,8 @@ const GroupChatContainer = () => {
                     <div
                       className={`relative p-3 border border-border max-w-[75%] whitespace-pre-wrap wrap-break-word shadow-sm ${
                         isMe
-                          ? "bg-primary text-primary-foreground rounded-lg rounded-tr-none"
-                          : "bg-card text-card-foreground rounded-lg rounded-tl-none"
+                          ? "bg-primary text-primary-foreground rounded-2xl rounded-tr-none"
+                          : "bg-card text-card-foreground rounded-2xl rounded-tl-none"
                       }`}
                     >
                       {msg.text && <p>{msg.text}</p>}
