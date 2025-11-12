@@ -40,7 +40,7 @@ const GroupChatContainer = () => {
   ]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages]);
 
   const isMember = selectedGroup.members?.some((m) => m._id === authUser?._id);

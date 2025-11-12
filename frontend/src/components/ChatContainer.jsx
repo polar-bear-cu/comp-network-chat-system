@@ -36,7 +36,7 @@ const ChatContainer = () => {
   ]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages]);
 
   const isSelectedUserTyping = selectedUser && typingUsers[selectedUser._id];
