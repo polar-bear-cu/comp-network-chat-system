@@ -93,7 +93,7 @@ const GroupList = () => {
       <div className="flex border-b border-border">
         <button
           onClick={() => setActiveTab("my-groups")}
-          className={`flex-1 py-2 px-4 text-sm font-medium transition-colors ${
+          className={`flex-1 py-2 px-4 text-sm font-medium transition-colors cursor-pointer ${
             activeTab === "my-groups"
               ? "text-primary border-b-2 border-primary"
               : "text-muted-foreground hover:text-foreground"
@@ -103,7 +103,7 @@ const GroupList = () => {
         </button>
         <button
           onClick={() => setActiveTab("available")}
-          className={`flex-1 py-2 px-4 text-sm font-medium transition-colors ${
+          className={`flex-1 py-2 px-4 text-sm font-medium transition-colors cursor-pointer ${
             activeTab === "available"
               ? "text-primary border-b-2 border-primary"
               : "text-muted-foreground hover:text-foreground"
