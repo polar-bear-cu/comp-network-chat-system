@@ -48,7 +48,13 @@ export const useGroupStore = create((set, get) => ({
       if (socket && socket.connected) {
         socket.emit("joinGroup", { groupId: group._id });
       }
-      get().markGroupMessagesAsRead(group._id);
+      
+      const { myGroups } = get();
+      const isUserMember = myGroups.some(g => g._id === group._id);
+      
+      if (isUserMember) {
+        get().markGroupMessagesAsRead(group._id);
+      }
     }
   },
 
