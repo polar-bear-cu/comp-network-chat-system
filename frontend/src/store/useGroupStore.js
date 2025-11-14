@@ -48,7 +48,6 @@ export const useGroupStore = create((set, get) => ({
       if (socket && socket.connected) {
         socket.emit("joinGroup", { groupId: group._id });
       }
-
       get().markGroupMessagesAsRead(group._id);
     }
   },
@@ -101,9 +100,7 @@ export const useGroupStore = create((set, get) => ({
   createGroup: async (name) => {
     try {
       const res = await axiosInstance.post("/groups", { name });
-
       await get().getMyGroups();
-
       return { success: true, group: res.data };
     } catch (error) {
       return {
@@ -152,7 +149,6 @@ export const useGroupStore = create((set, get) => ({
   leaveGroup: async (groupId) => {
     try {
       const res = await axiosInstance.post(`/groups/${groupId}/leave`);
-
       await Promise.all([get().getMyGroups(), get().getAvailableGroups()]);
 
       const currentSelected = get().selectedGroup;
@@ -192,7 +188,6 @@ export const useGroupStore = create((set, get) => ({
   markGroupMessagesAsRead: async (groupId) => {
     try {
       await axiosInstance.put(`/groups/${groupId}/mark-read`);
-
       set((state) => {
         const newGroupUnreadCounts = { ...state.groupUnreadCounts };
         delete newGroupUnreadCounts[groupId];
@@ -309,7 +304,6 @@ export const useGroupStore = create((set, get) => ({
         console.log("Backend rate limit: Group message queued");
         return false;
       }
-
       console.error("Error sending group message:", error);
       return false;
     }
@@ -346,7 +340,6 @@ export const useGroupStore = create((set, get) => ({
 
       if (!groupExists) {
         set({ allGroups: [...currentGroups, newGroup] });
-
         const isUserMember = newGroup.members.some(
           (member) => member._id === authUser._id
         );
@@ -360,7 +353,6 @@ export const useGroupStore = create((set, get) => ({
     socket.on("groupUpdated", (updatedGroup) => {
       get().getMyGroupsSilent();
       get().getAvailableGroups();
-
       const currentGroups = get().allGroups;
       const updatedGroups = currentGroups.map((g) =>
         g._id === updatedGroup._id ? updatedGroup : g
@@ -376,7 +368,6 @@ export const useGroupStore = create((set, get) => ({
     socket.on("newGroupMessageNotification", (data) => {
       const { selectedGroup, processedNotifications } = get();
       const { authUser } = useAuthStore.getState();
-
       const notificationId = `${data._id || "no-id"}-${data.groupId}-${
         data.senderId
       }-${data.createdAt || Date.now()}`;
@@ -389,6 +380,7 @@ export const useGroupStore = create((set, get) => ({
 
       if (!selectedGroup || selectedGroup._id !== data.groupId) {
         set((state) => {
+
           const newProcessedNotifications = new Set(
             state.processedNotifications
           );
@@ -409,6 +401,22 @@ export const useGroupStore = create((set, get) => ({
           return {
             groupUnreadCounts: newGroupUnreadCounts,
             processedNotifications: newProcessedNotifications,
+            
+          const newProcessedNotifications = new Set(state.processedNotifications);
+          newProcessedNotifications.add(notificationId);
+          
+          if (newProcessedNotifications.size > 100) {
+            const entries = Array.from(newProcessedNotifications);
+            entries.slice(0, 50).forEach(id => newProcessedNotifications.delete(id));
+          }
+          
+          const newGroupUnreadCounts = { ...state.groupUnreadCounts };
+          const groupId = data.groupId;
+          newGroupUnreadCounts[groupId] = (newGroupUnreadCounts[groupId] || 0) + 1;
+          
+          return { 
+            groupUnreadCounts: newGroupUnreadCounts,
+            processedNotifications: newProcessedNotifications
           };
         });
       }
@@ -422,7 +430,6 @@ export const useGroupStore = create((set, get) => ({
     socket.off("newGroup");
     socket.off("groupUpdated");
     socket.off("newGroupMessageNotification");
-
     set({ isSubscribed: false });
   },
 
@@ -463,7 +470,6 @@ export const useGroupStore = create((set, get) => ({
       if (!messageExists) {
         set({ messages: [...currentMessages, newMessage] });
       }
-
       get().markGroupMessagesAsRead(selectedGroup._id);
     });
 
@@ -491,6 +497,7 @@ export const useGroupStore = create((set, get) => ({
 
             return { ...msg, readBy: [...readBy, userId] };
           }),
+
         });
       }
     });

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useGroupStore } from "@/store/useGroupStore";
 import { useChatStore } from "@/store/useChatStore";
 import UsersLoadingSkeleton from "./UserLoadingSkeleton";
-import { Check, Users } from "lucide-react";
+import { Check, Users, Plus } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const GroupList = () => {
