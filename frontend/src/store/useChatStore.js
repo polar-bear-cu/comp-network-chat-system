@@ -152,6 +152,7 @@ export const useChatStore = create((set, get) => ({
   sendMessage: (userId, text) => {
     const { selectedUser, messages, canSendMessage, lastSentTime } = get();
     const now = Date.now();
+    const socket = useAuthStore.getState().socket;
 
     if (!canSendMessage || now - lastSentTime < 1000) {
       console.log("Frontend rate limit: Message queued");
