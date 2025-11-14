@@ -159,14 +159,16 @@ export const useChatStore = create((set, get) => ({
       return false;
     }
 
-    socket.emit("sendMessage", {
+    const message = {
       senderId: userId,
       receiverId: selectedUser._id,
       text: text,
-    });
+    };
+
+    socket.emit("sendMessage", message);
 
     set({
-      messages: [...messages, res.data],
+      messages: [...messages, message],
       canSendMessage: false,
       lastSentTime: now,
     });
