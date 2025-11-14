@@ -7,7 +7,7 @@ import GroupChatHeader from "./GroupChatHeader";
 import MessagesLoadingSkeleton from "./MessagesLoadingSkeleton";
 import NoGroupChatHistoryPlaceholder from "./NoGroupChatHistoryPlaceHolder";
 import { formatMessageTime } from "@/lib/utils";
-import { UserRoundMinus, UserRoundPlus } from "lucide-react";
+import { UserRoundMinus, UserRoundPlus, PlusCircle } from "lucide-react";
 import TypingText from "./TypingText";
 
 const GroupChatContainer = () => {
@@ -69,9 +69,11 @@ const GroupChatContainer = () => {
                     <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted/50 border border-border text-muted-foreground text-sm">
                       {msg.systemMessageType === "join" ? (
                         <UserRoundPlus className="w-4 h-4 text-primary" />
-                      ) : (
+                      ) : msg.systemMessageType === "leave" ? (
                         <UserRoundMinus className="w-4 h-4 text-primary" />
-                      )}
+                      ) : msg.systemMessageType === "create" ? (
+                        <PlusCircle className="w-4 h-4 text-primary" />
+                      ) : null}
                       <span>{msg.text}</span>
                       <span className="opacity-50">
                         {formatMessageTime(msg.createdAt)}
