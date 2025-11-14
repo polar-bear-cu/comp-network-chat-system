@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useGroupStore } from "@/store/useGroupStore";
 import { useChatStore } from "@/store/useChatStore";
 import UsersLoadingSkeleton from "./UserLoadingSkeleton";
-import { Check, Users, Plus } from "lucide-react";
+import { Check, Users } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const GroupList = () => {
@@ -16,12 +16,10 @@ const GroupList = () => {
     setSelectedGroup, 
     isMyGroupsLoading, 
     isAvailableGroupsLoading,
-    joinGroup,
     getGroupUnreadCounts,
-    groupUnreadCounts
+    groupUnreadCounts,
+    activeGroupTab
   } = useGroupStore();
-
-  const [activeTab, setActiveTab] = useState("my-groups");
 
   useEffect(() => {
     getMyGroups();
@@ -29,16 +27,8 @@ const GroupList = () => {
     getGroupUnreadCounts();
   }, [getMyGroups, getAvailableGroups, getGroupUnreadCounts]);
 
-  const handleJoinGroup = async (e, groupId) => {
-    e.stopPropagation();
-    const result = await joinGroup(groupId);
-    if (result.success) {
-      setActiveTab("my-groups");
-      setGlobalActiveTab("groups");
-      setSelectedGroup(result.group);
-    } else {
-      console.error("Failed to join group:", result.message);
-    }
+  const setActiveTab = (tab) => {
+    useGroupStore.setState({ activeGroupTab: tab });
   };
 
   const renderGroupItem = (group, showJoinButton = false) => {
@@ -48,7 +38,7 @@ const GroupList = () => {
       <div
         key={group._id}
         className="p-4 rounded-lg cursor-pointer bg-muted/30 border border-border hover:bg-muted/50 transition-colors"
-        onClick={() => !showJoinButton && setSelectedGroup(group)}
+        onClick={() => setSelectedGroup(group)}
       >
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full relative bg-muted flex items-center justify-center border border-border">
@@ -70,15 +60,6 @@ const GroupList = () => {
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </div>
                 )}
-                {showJoinButton && (
-                  <button
-                    onClick={(e) => handleJoinGroup(e, group._id)}
-                    className="p-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                    title="Join Group"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                )}
               </div>
             </div>
             <p className="text-sm truncate text-foreground/60">
@@ -97,7 +78,7 @@ const GroupList = () => {
         <button
           onClick={() => setActiveTab("my-groups")}
           className={`flex-1 py-2 px-4 text-sm font-medium transition-colors cursor-pointer ${
-            activeTab === "my-groups"
+            activeGroupTab === "my-groups"
               ? "text-primary border-b-2 border-primary"
               : "text-muted-foreground hover:text-foreground"
           }`}
@@ -107,7 +88,7 @@ const GroupList = () => {
         <button
           onClick={() => setActiveTab("available")}
           className={`flex-1 py-2 px-4 text-sm font-medium transition-colors cursor-pointer ${
-            activeTab === "available"
+            activeGroupTab === "available"
               ? "text-primary border-b-2 border-primary"
               : "text-muted-foreground hover:text-foreground"
           }`}
@@ -118,7 +99,7 @@ const GroupList = () => {
 
       {/* Tab Content */}
       <div className="space-y-3">
-        {activeTab === "my-groups" && (
+        {activeGroupTab === "my-groups" && (
           <>
             {isMyGroupsLoading ? (
               <UsersLoadingSkeleton />
@@ -136,7 +117,7 @@ const GroupList = () => {
           </>
         )}
 
-        {activeTab === "available" && (
+        {activeGroupTab === "available" && (
           <>
             {isAvailableGroupsLoading ? (
               <UsersLoadingSkeleton />
