@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import http from "http";
 import express from "express";
 import { socketAuthMiddleware } from "../middleware/socket.auth.middleware.js";
+import { create } from "domain";
 
 const app = express();
 const server = http.createServer(app);
@@ -76,6 +77,31 @@ socketServer.on("connection", (socket) => {
         .to(receiverSocketId)
         .emit("newMessageNotification", newMessage);
     }
+  });
+
+  socket.on("sendGroupMessage", ({ sender, groupId, text }) => {
+    const newMessage = {
+      sender,
+      groupId,
+      text,
+      readBy: [],
+      createdAt: new Date(),
+    };
+
+    console.log("Received group message:", newMessage);
+
+    // Send to all clients in the group room (including sender)
+    socketServer.in(groupId).emit("newGroupMessage", {
+      ...newMessage,
+      groupId,
+    });
+
+    // Send notification to all group members
+    socketServer.in(groupId).emit("newGroupMessageNotification", {
+      ...newMessage,
+      groupId,
+      senderId: sender._id,
+    });
   });
 
   socket.on("joinGroup", ({ groupId }) => {

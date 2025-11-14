@@ -68,38 +68,52 @@ const GroupChatHeader = () => {
       </div>
 
       <div className="flex items-center space-x-3">
-        {/* Members Popup */}
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="secondary" size="sm">
-              View Members
-            </Button>
-          </DialogTrigger>
+        {/* Members Popup - Only show for members */}
+        {isMember && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="secondary" size="sm">
+                View Members
+              </Button>
+            </DialogTrigger>
 
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Group Members</DialogTitle>
-            </DialogHeader>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Group Members</DialogTitle>
+              </DialogHeader>
 
-            <div className="space-y-2">
-              {sortedMembers.map((member) => (
-                <div
-                  key={member._id}
-                  className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted transition"
-                >
-                  <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-sm font-bold text-accent-foreground">
-                    {member.username[0].toUpperCase()}
-                  </div>
-                  <p className="text-sm">
-                    {member.username}
-                    {member._id === selectedGroup.owner._id && " (Owner)"}
-                    {member._id === authUser._id && " (Me)"}
-                  </p>
+              <div className="bg-muted/30 rounded-lg p-4 border border-border">
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {sortedMembers.map((member) => (
+                    <div
+                      key={member._id}
+                      className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary border border-primary/20">
+                        {member.username[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-sm text-foreground">
+                          {member.username}
+                          {member._id === selectedGroup.owner._id && (
+                            <span className="ml-1 text-xs text-primary font-medium">
+                              (Owner)
+                            </span>
+                          )}
+                          {member._id === authUser._id && (
+                            <span className="ml-1 text-xs text-muted-foreground">
+                              (Me)
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {isMember && !isOwner && (
           <Dialog>
