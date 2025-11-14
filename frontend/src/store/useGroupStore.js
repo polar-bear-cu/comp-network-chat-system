@@ -18,7 +18,7 @@ export const useGroupStore = create((set, get) => ({
   groupMessageCooldowns: {},
   groupUnreadCounts: {},
   processedNotifications: new Set(), // Track processed notification IDs
-  isSubscribed: false, // Track subscription state
+  isSubscribed: false, // Track subscription state 
   activeGroupTab: "my-groups", // Current active tab in GroupList
 
   setOpenCreateGroupPopup: (open) => set({ openCreateGroupPopup: open }),
@@ -48,7 +48,13 @@ export const useGroupStore = create((set, get) => ({
       if (socket && socket.connected) {
         socket.emit("joinGroup", { groupId: group._id });
       }
-      get().markGroupMessagesAsRead(group._id);
+      
+      const { myGroups } = get();
+      const isUserMember = myGroups.some(g => g._id === group._id);
+      
+      if (isUserMember) {
+        get().markGroupMessagesAsRead(group._id);
+      }
     }
   },
 
@@ -438,12 +444,10 @@ export const useGroupStore = create((set, get) => ({
 
       const currentMessages = get().messages;
 
-      // For real-time messages without _id, check by content and timestamp
       const messageExists = currentMessages.some((msg) => {
         if (newMessage._id && msg._id) {
           return msg._id === newMessage._id;
         }
-        // For messages without _id, check by sender, text, and timestamp
         return (
           msg.sender?._id === newMessage.sender?._id &&
           msg.text === newMessage.text &&
@@ -455,7 +459,13 @@ export const useGroupStore = create((set, get) => ({
       if (!messageExists) {
         set({ messages: [...currentMessages, newMessage] });
       }
-      get().markGroupMessagesAsRead(selectedGroup._id);
+
+      const { myGroups } = get();
+      const isUserMember = myGroups.some(g => g._id === selectedGroup._id);
+      
+      if (isUserMember) {
+        get().markGroupMessagesAsRead(selectedGroup._id);
+      }
     });
 
     socket.on("groupUserTyping", ({ groupId, userId, username }) => {
