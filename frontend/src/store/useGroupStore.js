@@ -124,12 +124,9 @@ export const useGroupStore = create((set, get) => ({
   joinGroup: async (groupId) => {
     try {
       const res = await axiosInstance.post(`/groups/${groupId}/join`);
-      
-      await Promise.all([
-        get().getMyGroups(),
-        get().getAvailableGroups()
-      ]);
-      
+
+      await Promise.all([get().getMyGroups(), get().getAvailableGroups()]);
+
       const { setActiveTab } = useChatStore.getState();
 
       get().setSelectedGroup(null);
@@ -137,11 +134,11 @@ export const useGroupStore = create((set, get) => ({
       setActiveTab("groups");
 
       set({ activeGroupTab: "my-groups" });
-      
+
       setTimeout(() => {
         get().setSelectedGroup(res.data);
       }, 100);
-      
+
       return { success: true, group: res.data };
     } catch (error) {
       console.error("Error joining group:", error);
@@ -274,6 +271,7 @@ export const useGroupStore = create((set, get) => ({
         sender: authUser,
         groupId: groupId,
         text: text,
+        readBy: [],
         createdAt: new Date(),
       };
 
