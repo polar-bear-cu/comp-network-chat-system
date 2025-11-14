@@ -193,6 +193,7 @@ export const useChatStore = create((set, get) => ({
       });
     } catch (error) {
       console.error("Error saving message:", error);
+
     }
   },
 
@@ -243,6 +244,16 @@ export const useChatStore = create((set, get) => ({
           })),
         }));
       }
+    });
+
+    socket.on("userTyping", ({ senderId }) => {
+      console.log("User typing:", senderId);
+      get().setTypingUser(senderId, true);
+    });
+
+    socket.on("userStopTyping", ({ senderId }) => {
+      console.log("User stop typing:", senderId);
+      get().setTypingUser(senderId, false);
     });
   },
 

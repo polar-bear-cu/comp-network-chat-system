@@ -1,90 +1,105 @@
 # SockeTalk
 
-A real-time chat application built with React, Node.js, Express, MongoDB, and Socket.IO featuring both direct messaging and group chat capabilities.
+A modern, real-time chat application built with React, Node.js, Express, MongoDB, and Socket.IO.
 
 ## 🌐 Live Demo
 
 **Production URL**: [https://polar-bear-chat-system-gpapr.sevalla.app/](https://polar-bear-chat-system-gpapr.sevalla.app/)
 
-> *Deployed on Sevalla*
+> *Hosted on Sevalla Cloud Platform*
 
-## ✨ Features
+## ✨ Key Features
 
-- **Real-time Communication**: Instant messaging using Socket.IO
-- **User Authentication**: Secure JWT-based authentication with bcrypt password hashing
+### 💬 Real-time Communication
+- **Instant Messaging**: Powered by Socket.IO for seamless real-time updates
+- **Typing Indicators**: See when others are typing in both DMs and group chats
+- **Online Status**: Real-time presence indicators showing who's online
+- **Message Timestamps**: Every message shows exact time sent
+
+### 👥 User Management
+- **Secure Authentication**: JWT-based authentication with bcrypt password hashing
+- **HTTP-only Cookies**: Enhanced security for token storage
+- **User Profiles**: Simple, elegant profile display
+
+### 💭 Messaging Features
 - **Direct Messaging**: Private one-on-one conversations
-- **Group Chat**: Create and join group conversations
-- **Online Status**: Real-time online/offline user indicators
-- **Message History**: Persistent message storage in MongoDB
-- **Modern UI**: Responsive design with Tailwind CSS and shadcn/ui components
-- **Dark Mode Support**: Built-in light and dark theme support
+- **Group Chat**: Create and join unlimited group conversations
+- **Join/Leave Groups**: Flexible group membership with system notifications
+- **Group Ownership**: Group creators have special privileges
+- **Message History**: All messages are stored persistently in MongoDB
+- **Chat Management**: Organized tabs for Chats, Contacts, and Groups
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-- React 19 (JavaScript)
-- Vite
-- Tailwind CSS 4
-- shadcn/ui components
-- Zustand (state management)
-- Socket.IO Client
-- React Router
-- Axios
+- **React* 
+- **Vite**
+- **Tailwind CSS**
+- **shadcn/ui**
+- **Zustand** for state management
+- **Socket.IO Client** for communication
+- **React Router**
+- **Axios**
+- **Lucide React**
 
 ### Backend
-- Node.js
-- Express 5
-- MongoDB with Mongoose
-- Socket.IO
-- JWT authentication
-- bcryptjs
+- **Node.js**
+- **Express**
+- **MongoDB**
+- **Socket.IO**
+- **JWT**
+- **bcryptjs**
+- **Cookie Parser**
+- **CORS**
 
-## 🚀 Installation
+## 🚀 Quick Start
+
+### Installation
 
 1. **Clone the repository**
-```bash
-git clone https://github.com/polar-bear-cu/comp-network-chat-system.git
-cd comp-network-chat-system
-```
+   ```bash
+   git clone https://github.com/polar-bear-cu/comp-network-chat-system.git
+   cd comp-network-chat-system
+   ```
 
 2. **Backend Setup**
-```bash
-cd backend
-npm install
-```
+   ```bash
+   cd backend
+   npm install
+   ```
 
-Create a `.env` file in the `backend` directory:
-```env
-PORT=3000
-MONGO_URI=your_mongodb_connection_string
-NODE_ENV=development
-JWT_SECRET=your_jwt_secret_key
-CLIENT_URL=http://localhost:5173
-```
+   Create `.env` file:
+   ```env
+   PORT=3000
+   MONGO_URI=mongodb://localhost:27017/sockettalk
+   NODE_ENV=development
+   JWT_SECRET=your_secure_secret_key_here
+   CLIENT_URL=http://localhost:5173
+   ```
 
 3. **Frontend Setup**
-```bash
-cd ../frontend
-npm install
-```
+   ```bash
+   cd ../frontend
+   npm install
+   ```
 
-## 💻 Running the Application
+### Development
 
-### Development Mode
+Run both backend and frontend concurrently:
 
-1. **Start Backend Server**
+**Terminal 1 - Backend:**
 ```bash
 cd backend
 npm run dev
 ```
-The server will run on `http://localhost:3000`
+Server runs at `http://localhost:3000`
 
-2. **Start Frontend Development Server**
+**Terminal 2 - Frontend:**
 ```bash
 cd frontend
 npm run dev
 ```
-The app will run on `http://localhost:5173`
+App runs at `http://localhost:5173`
 
 ### Production Build
 
@@ -94,22 +109,33 @@ npm run build
 npm start
 ```
 
-This will:
-- Install dependencies for both frontend and backend
-- Build the frontend for production
-- Serve the application from the backend server
-
 ## 📁 Project Structure
 
 ```
 comp-network-chat-system/
 ├── backend/
 │   ├── src/
-│   │   ├── controllers/      # Request handlers
-│   │   ├── lib/              # Utilities (DB, Socket, JWT)
+│   │   ├── controllers/      # Route handlers
+│   │   │   ├── auth.controller.js
+│   │   │   ├── message.controller.js
+│   │   │   ├── group.controller.js
+│   │   │   └── group.message.controller.js
+│   │   ├── lib/              # Utilities
+│   │   │   ├── db.js         # MongoDB connection
+│   │   │   ├── socket.js     # Socket.IO setup
+│   │   │   └── utils.js      # Helper functions
 │   │   ├── middleware/       # Auth middleware
-│   │   ├── model/            # MongoDB schemas
+│   │   │   ├── auth.middleware.js
+│   │   │   └── socket.auth.middleware.js
+│   │   ├── model/            # Mongoose schemas
+│   │   │   ├── user.model.js
+│   │   │   ├── message.model.js
+│   │   │   ├── group.model.js
+│   │   │   └── group.message.model.js
 │   │   ├── routes/           # API routes
+│   │   │   ├── auth.route.js
+│   │   │   ├── message.route.js
+│   │   │   └── group.route.js
 │   │   └── server.js         # Entry point
 │   └── package.json
 ├── frontend/
@@ -118,106 +144,102 @@ comp-network-chat-system/
 │   │   ├── lib/              # Utilities
 │   │   ├── page/             # Page components
 │   │   ├── store/            # Zustand stores
+│   │   │   ├── useAuthStore.js
+│   │   │   ├── useChatStore.js
+│   │   │   └── useGroupStore.js
 │   │   └── main.jsx          # Entry point
 │   └── package.json
-└── package.json              # Root package.json
+└── package.json              # Root scripts
 ```
 
-## 🔌 API Endpoints
+## 🔌 API Documentation
 
-### Authentication
-- `POST /api/auth/signup` - Register new user
-- `POST /api/auth/login` - Login user
-- `POST /api/auth/logout` - Logout user
-- `GET /api/auth/check` - Check authentication status
+### Authentication Routes
+```
+POST   /api/auth/signup    Register new user
+POST   /api/auth/login     Login user
+POST   /api/auth/logout    Logout user
+GET    /api/auth/check     Verify authentication
+```
 
-### Messages
-- `GET /api/messages/contacts` - Get all contacts
-- `GET /api/messages/chats` - Get chat partners
-- `GET /api/messages/:id` - Get messages with specific user
-- `POST /api/messages/send/:id` - Send message to user
+### Message Routes
+```
+GET    /api/messages/contacts    Get all users
+GET    /api/messages/chats       Get users with chat history
+GET    /api/messages/:id         Get messages with specific user
+POST   /api/messages/send/:id    Send message to user
+```
 
-### Groups
-- `GET /api/groups` - Get all groups
-- `GET /api/groups/:id` - Get group by ID
-- `GET /api/groups/:id/messages` - Get group messages
-- `POST /api/groups` - Create new group
-- `POST /api/groups/:id/join` - Join group
-- `POST /api/groups/:id/send` - Send message to group
+### Group Routes
+```
+GET    /api/groups               Get all groups
+GET    /api/groups/:id           Get group details
+GET    /api/groups/:id/messages  Get group messages
+POST   /api/groups               Create new group
+POST   /api/groups/:id/join      Join group
+POST   /api/groups/:id/leave     Leave group
+POST   /api/groups/:id/send      Send message to group
+```
 
 ## 🔄 Socket.IO Events
 
 ### Client → Server
 - `connection` - User connects
 - `disconnect` - User disconnects
+- `typing` - User is typing (DM)
+- `stopTyping` - User stopped typing (DM)
+- `joinGroup` - User joins group room
+- `leaveGroup` - User leaves group room
+- `groupTyping` - User is typing in group
+- `groupStopTyping` - User stopped typing in group
 
 ### Server → Client
 - `getOnlineUsers` - Broadcast online users list
-- `newMessage` - New direct message
-- `newGroupMessage` - New group message
+- `newMessage` - New direct message received
+- `newGroupMessage` - New group message received
 - `newGroup` - New group created
 - `groupUpdated` - Group information updated
+- `newUser` - New user registered
+- `userTyping` - Someone is typing to you
+- `userStopTyping` - Someone stopped typing
+- `groupUserTyping` - Someone is typing in group
+- `groupUserStopTyping` - Someone stopped typing in group
 
 ## ⚙️ Environment Variables
 
-### Backend
-| Variable | Description | Example |
-|----------|-------------|---------|
-| PORT | Server port | 3000 |
-| MONGO_URI | MongoDB connection string | mongodb://localhost:27017/sockettalk |
-| NODE_ENV | Environment | development/production |
-| JWT_SECRET | Secret key for JWT | your_secret_key |
-| CLIENT_URL | Frontend URL | http://localhost:5173 |
+### Backend (.env)
+```env
+PORT=3000                              # Server port
+MONGO_URI=mongodb://...                # MongoDB connection string
+NODE_ENV=development                   # Environment (development/production)
+JWT_SECRET=your_secret_key            # JWT signing secret
+CLIENT_URL=http://localhost:5173      # Frontend URL for CORS
+```
 
 ## 🚢 Deployment
 
-### Deployed on Sevalla
+### Deploy to Sevalla (Current Setup)
 
-This application is currently hosted on [Sevalla](https://sevalla.com/), a modern cloud hosting platform.
-
-**Production URL**: [https://polar-bear-chat-system-gpapr.sevalla.app/](https://polar-bear-chat-system-gpapr.sevalla.app/)
-
-### Deployment Setup
-
-1. **Database Setup - MongoDB Atlas**
-   - Create a free cluster at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-   - Get your connection string
-   - Whitelist all IP addresses (0.0.0.0/0) for Sevalla
+1. **Setup MongoDB Atlas**
+   - Create free cluster at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+   - Get connection string
+   - Whitelist all IPs (0.0.0.0/0)
 
 2. **Deploy to Sevalla**
    - Sign up at [Sevalla](https://sevalla.com/)
-   - Connect your GitHub repository
-   - Configure build settings:
-     - Build command: `npm run build`
-     - Start command: `npm start`
-   - Set environment variables (see below)
-   - Deploy your application
+   - Connect GitHub repository
+   - Configure:
+     - Build: `npm run build`
+     - Start: `npm start`
+   - Set environment variables
+   - Deploy
 
-3. **Production Environment Variables**
-```env
-PORT=3000
-MONGO_URI=your_mongodb_atlas_connection_string
-NODE_ENV=production
-JWT_SECRET=your_secure_jwt_secret_key
-CLIENT_URL=https://polar-bear-chat-system-gpapr.sevalla.app
-```
-
-## 🎯 Features Overview
-
-### User Authentication
-- Secure password hashing with bcryptjs
-- JWT token-based authentication
-- HTTP-only cookies for token storage
-- Protected routes
-
-### Real-time Features
-- Socket.IO for instant messaging
-- Online/offline status indicators
-- Real-time group updates
-
-### Chat Features
-- Direct messaging between users
-- Group chat functionality
-- Message history
-- Timestamps on messages
-- User presence indicators
+3. **Production Environment**
+   ```env
+   PORT=3000
+   MONGO_URI=mongodb+srv://...
+   NODE_ENV=production
+   JWT_SECRET=secure_random_string
+   CLIENT_URL=https://your-app.sevalla.app
+   ```
+---

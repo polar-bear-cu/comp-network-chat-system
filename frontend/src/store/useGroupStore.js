@@ -410,7 +410,6 @@ export const useGroupStore = create((set, get) => ({
     socket.on("newGroupMessage", (newMessage) => {
       const { selectedGroup } = get();
       const isMessageForCurrentGroup = newMessage.groupId === selectedGroup._id;
-      
       get().getMyGroupsSilent();
       
       if (!isMessageForCurrentGroup) return;
@@ -451,6 +450,16 @@ export const useGroupStore = create((set, get) => ({
           })
         });
       }
+    });
+
+    socket.on("groupUserTyping", ({ groupId, userId, username }) => {
+      console.log("Group user typing:", groupId, userId, username);
+      get().setGroupTypingUser(groupId, userId, username, true);
+    });
+
+    socket.on("groupUserStopTyping", ({ groupId, userId }) => {
+      console.log("Group user stop typing:", groupId, userId);
+      get().setGroupTypingUser(groupId, userId, null, false);
     });
   },
 
