@@ -238,10 +238,9 @@ export const useGroupStore = create((set, get) => ({
     });
   },
 
-  sendGroupMessage: async (text) => {
+  sendGroupMessage: async (groupId, text) => {
     try {
-      const { selectedGroup, messages, groupMessageCooldowns } = get();
-      const groupId = selectedGroup._id;
+      const { messages, groupMessageCooldowns } = get();
       const socket = useAuthStore.getState().socket;
       const authUser = useAuthStore.getState().authUser;
       const now = Date.now();
