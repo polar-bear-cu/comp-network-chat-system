@@ -78,6 +78,26 @@ socketServer.on("connection", (socket) => {
     }
   });
 
+  socket.on("sendGroupMessage", ({ sender, groupId, text }) => {
+    const newMessage = {
+      sender,
+      groupId,
+      text,
+      readBy: [],
+    };
+
+    socketServer.emit("newGroupMessage", {
+      ...newMessage.toObject(),
+      groupId,
+    });
+
+    socketServer.emit("newGroupMessageNotification", {
+      ...newMessage.toObject(),
+      groupId,
+      senderId: sender._id,
+    });
+  });
+
   socket.on("joinGroup", ({ groupId }) => {
     socket.join(groupId);
 
