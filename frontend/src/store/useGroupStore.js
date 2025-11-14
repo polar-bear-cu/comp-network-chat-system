@@ -4,13 +4,21 @@ import { useChatStore } from "./useChatStore";
 import { useAuthStore } from "./useAuthStore";
 
 export const useGroupStore = create((set, get) => ({
-  allGroups: [],
+  allGroups: [], // Keep for backward compatibility
+  myGroups: [], // Groups user has joined
+  availableGroups: [], // Groups user can join
   messages: [],
   isMessagesLoading: false,
   selectedGroup: null,
   isGroupsLoading: false,
+  isMyGroupsLoading: false,
+  isAvailableGroupsLoading: false,
   openCreateGroupPopup: false,
   groupTypingUsers: {},
+  groupMessageCooldowns: {},
+  groupUnreadCounts: {},
+  processedNotifications: new Set(), // Track processed notification IDs 
+  isSubscribed: false, // Track subscription state
 
   setOpenCreateGroupPopup: (open) => set({ openCreateGroupPopup: open }),
 
@@ -39,6 +47,8 @@ export const useGroupStore = create((set, get) => ({
       if (socket && socket.connected) {
         socket.emit("joinGroup", { groupId: group._id });
       }
+      
+      get().markGroupMessagesAsRead(group._id);
     }
   },
 
@@ -54,9 +64,45 @@ export const useGroupStore = create((set, get) => ({
     }
   },
 
+  getMyGroups: async () => {
+    set({ isMyGroupsLoading: true });
+    try {
+      const res = await axiosInstance.get("/groups/my-groups");
+      set({ myGroups: res.data });
+    } catch (error) {
+      console.error("Error fetching my groups:", error);
+    } finally {
+      set({ isMyGroupsLoading: false });
+    }
+  },
+
+  getAvailableGroups: async () => {
+    set({ isAvailableGroupsLoading: true });
+    try {
+      const res = await axiosInstance.get("/groups/available");
+      set({ availableGroups: res.data });
+    } catch (error) {
+      console.error("Error fetching available groups:", error);
+    } finally {
+      set({ isAvailableGroupsLoading: false });
+    }
+  },
+
+  getMyGroupsSilent: async () => {
+    try {
+      const res = await axiosInstance.get("/groups/my-groups");
+      set({ myGroups: res.data });
+    } catch (error) {
+      console.error("Error fetching my groups silently:", error);
+    }
+  },
+
   createGroup: async (name) => {
     try {
       const res = await axiosInstance.post("/groups", { name });
+      
+      await get().getMyGroups();
+      
       return { success: true, group: res.data };
     } catch (error) {
       return {
@@ -77,7 +123,12 @@ export const useGroupStore = create((set, get) => ({
   joinGroup: async (groupId) => {
     try {
       const res = await axiosInstance.post(`/groups/${groupId}/join`);
-      await get().getAllGroups();
+      
+      await Promise.all([
+        get().getMyGroups(),
+        get().getAvailableGroups()
+      ]);
+      
       return { success: true, group: res.data };
     } catch (error) {
       console.error("Error joining group:", error);
@@ -91,7 +142,11 @@ export const useGroupStore = create((set, get) => ({
   leaveGroup: async (groupId) => {
     try {
       const res = await axiosInstance.post(`/groups/${groupId}/leave`);
-      await get().getAllGroups();
+      
+      await Promise.all([
+        get().getMyGroups(),
+        get().getAvailableGroups()
+      ]);
 
       const currentSelected = get().selectedGroup;
       if (currentSelected?._id === groupId) {
@@ -115,6 +170,29 @@ export const useGroupStore = create((set, get) => ({
       console.error("Error fetching group messages:", error);
     } finally {
       set({ isMessagesLoading: false });
+    }
+  },
+
+  getGroupUnreadCounts: async () => {
+    try {
+      const res = await axiosInstance.get("/groups/unread-counts");
+      set({ groupUnreadCounts: res.data });
+    } catch (error) {
+      console.error("Error fetching group unread counts:", error);
+    }
+  },
+
+  markGroupMessagesAsRead: async (groupId) => {
+    try {
+      await axiosInstance.put(`/groups/${groupId}/mark-read`);
+      
+      set((state) => {
+        const newGroupUnreadCounts = { ...state.groupUnreadCounts };
+        delete newGroupUnreadCounts[groupId];
+        return { groupUnreadCounts: newGroupUnreadCounts };
+      });
+    } catch (error) {
+      console.error("Error marking group messages as read:", error);
     }
   },
 
@@ -168,14 +246,57 @@ export const useGroupStore = create((set, get) => ({
 
   sendGroupMessage: async (text) => {
     try {
-      const { selectedGroup, messages } = get();
+      const { selectedGroup, messages, groupMessageCooldowns } = get();
+      const groupId = selectedGroup._id;
+      const now = Date.now();
+      
+      const groupCooldown = groupMessageCooldowns[groupId];
+      const canSend = !groupCooldown || groupCooldown.canSend;
+      const lastSentTime = groupCooldown?.lastSentTime || 0;
+      
+      if (!canSend || (now - lastSentTime) < 1000) {
+        console.log(`Frontend rate limit: Message queued for group ${groupId}`);
+        return false;
+      }
+      
       const res = await axiosInstance.post(
         `/groups/${selectedGroup._id}/send`,
         { text }
       );
-      set({ messages: [...messages, res.data] });
+      
+      set({ 
+        messages: [...messages, res.data],
+        groupMessageCooldowns: {
+          ...groupMessageCooldowns,
+          [groupId]: {
+            canSend: false,
+            lastSentTime: now
+          }
+        }
+      });
+      
+      setTimeout(() => {
+        set((state) => ({
+          groupMessageCooldowns: {
+            ...state.groupMessageCooldowns,
+            [groupId]: {
+              ...state.groupMessageCooldowns[groupId],
+              canSend: true
+            }
+          }
+        }));
+      }, 1000);
+
+      get().getMyGroupsSilent();
+      return true;
     } catch (error) {
+      if (error.response?.status === 429) {
+        console.log("Backend rate limit: Group message queued");
+        return false;
+      }
+      
       console.error("Error sending group message:", error);
+      return false;
     }
   },
 
@@ -183,16 +304,38 @@ export const useGroupStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
 
+    const { isSubscribed } = get();
+    if (isSubscribed) {
+      console.log("Groups already subscribed, skipping...");
+      return;
+    }
+
+    socket.off("newGroup");
+    socket.off("groupUpdated");
+    socket.off("newGroupMessageNotification");
+
+    set({ isSubscribed: true });
+
     socket.on("newGroup", (newGroup) => {
+      const { authUser } = useAuthStore.getState();
       const currentGroups = get().allGroups;
       const groupExists = currentGroups.some((g) => g._id === newGroup._id);
 
       if (!groupExists) {
         set({ allGroups: [...currentGroups, newGroup] });
+        
+        const isUserMember = newGroup.members.some(member => member._id === authUser._id);
+        if (!isUserMember) {
+          const currentAvailableGroups = get().availableGroups;
+          set({ availableGroups: [...currentAvailableGroups, newGroup] });
+        }
       }
     });
 
     socket.on("groupUpdated", (updatedGroup) => {
+      get().getMyGroupsSilent();
+      get().getAvailableGroups();
+      
       const currentGroups = get().allGroups;
       const updatedGroups = currentGroups.map((g) =>
         g._id === updatedGroup._id ? updatedGroup : g
@@ -204,6 +347,40 @@ export const useGroupStore = create((set, get) => ({
         set({ selectedGroup: updatedGroup });
       }
     });
+
+    socket.on("newGroupMessageNotification", (data) => {
+      const { selectedGroup, processedNotifications } = get();
+      const { authUser } = useAuthStore.getState();
+      
+      const notificationId = `${data._id || 'no-id'}-${data.groupId}-${data.senderId}-${data.createdAt || Date.now()}`;
+      
+      if (processedNotifications.has(notificationId)) return;
+      
+      get().getMyGroupsSilent();
+
+      if (data.senderId && data.senderId === authUser._id) return;
+
+      if (!selectedGroup || selectedGroup._id !== data.groupId) {
+        set((state) => {
+          const newProcessedNotifications = new Set(state.processedNotifications);
+          newProcessedNotifications.add(notificationId);
+          
+          if (newProcessedNotifications.size > 100) {
+            const entries = Array.from(newProcessedNotifications);
+            entries.slice(0, 50).forEach(id => newProcessedNotifications.delete(id));
+          }
+          
+          const newGroupUnreadCounts = { ...state.groupUnreadCounts };
+          const groupId = data.groupId;
+          newGroupUnreadCounts[groupId] = (newGroupUnreadCounts[groupId] || 0) + 1;
+          
+          return { 
+            groupUnreadCounts: newGroupUnreadCounts,
+            processedNotifications: newProcessedNotifications
+          };
+        });
+      }
+    });
   },
 
   unsubscribeFromGroups: () => {
@@ -212,6 +389,10 @@ export const useGroupStore = create((set, get) => ({
 
     socket.off("newGroup");
     socket.off("groupUpdated");
+    socket.off("newGroupMessageNotification");
+    
+    set({ isSubscribed: false });
+
   },
 
   subscribeToGroupMessages: () => {
@@ -221,12 +402,54 @@ export const useGroupStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
 
+    socket.off("newGroupMessage");
+    socket.off("groupUserTyping");
+    socket.off("groupUserStopTyping");
+    socket.off("groupMessagesRead");
+
     socket.on("newGroupMessage", (newMessage) => {
+      const { selectedGroup } = get();
       const isMessageForCurrentGroup = newMessage.groupId === selectedGroup._id;
+      get().getMyGroupsSilent();
+      
       if (!isMessageForCurrentGroup) return;
 
       const currentMessages = get().messages;
-      set({ messages: [...currentMessages, newMessage] });
+      
+      const messageExists = currentMessages.some(msg => msg._id === newMessage._id);
+      if (!messageExists) {
+        set({ messages: [...currentMessages, newMessage] });
+      }
+      
+      get().markGroupMessagesAsRead(selectedGroup._id);
+    });
+
+    socket.on("groupUserTyping", ({ groupId, userId, username }) => {
+      console.log("Group user typing:", groupId, userId, username);
+      get().setGroupTypingUser(groupId, userId, username, true);
+    });
+
+    socket.on("groupUserStopTyping", ({ groupId, userId }) => {
+      console.log("Group user stop typing:", groupId, userId);
+      get().setGroupTypingUser(groupId, userId, null, false);
+    });
+
+    socket.on("groupMessagesRead", ({ groupId, userId }) => {
+      const { selectedGroup, messages } = get();
+      
+      if (selectedGroup && selectedGroup._id === groupId) {
+        set({
+          messages: messages.map(msg => {
+            const senderId = msg.sender?._id || msg.sender;
+            const readBy = msg.readBy || [];
+            const isAlreadyRead = readBy.some(r => (r._id || r) === userId);
+            
+            if (senderId === userId || isAlreadyRead) return msg;
+            
+            return { ...msg, readBy: [...readBy, userId] };
+          })
+        });
+      }
     });
 
     socket.on("groupUserTyping", ({ groupId, userId, username }) => {
@@ -247,5 +470,6 @@ export const useGroupStore = create((set, get) => ({
     socket.off("newGroupMessage");
     socket.off("groupUserTyping");
     socket.off("groupUserStopTyping");
+    socket.off("groupMessagesRead");
   },
 }));

@@ -10,6 +10,7 @@ export async function getMessagesByGroupId(req, res) {
 
     const messages = await GroupMessage.find({ groupId })
       .populate("sender", "username")
+      .populate("readBy", "username")
       .sort({ createdAt: 1 });
 
     res.status(200).json(messages);
@@ -33,6 +34,7 @@ export async function sendGroupMessage(req, res) {
       sender: loggedInUserId,
       groupId,
       text,
+      readBy: [],
     });
 
     await newMessage.save();
@@ -43,9 +45,69 @@ export async function sendGroupMessage(req, res) {
       groupId,
     });
 
+    socketServer.emit("newGroupMessageNotification", {
+      ...newMessage.toObject(),
+      groupId,
+      senderId: loggedInUserId,
+    });
+
     res.status(201).json(newMessage);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+export async function markGroupMessagesAsRead(req, res) {
+  try {
+    const groupId = req.params.id;
+    const loggedInUserId = req.user._id;
+
+    if (!groupId) {
+      return res.status(400).json({ message: "Group ID required" });
+    }
+
+    await GroupMessage.updateMany(
+      { 
+        groupId,
+        sender: { $ne: loggedInUserId },
+        readBy: { $nin: [loggedInUserId] }
+      },
+      { 
+        $addToSet: { readBy: loggedInUserId }
+      }
+    );
+
+    socketServer.emit("groupMessagesRead", {
+      groupId,
+      userId: loggedInUserId
+    });
+
+    res.status(200).json({ message: "Messages marked as read" });
+  } catch (error) {
+    console.error("Error marking group messages as read:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+export async function markAllPreviousMessagesAsRead(groupId, userId) {
+  try {
+    await GroupMessage.updateMany(
+      { 
+        groupId,
+        sender: { $ne: userId },
+        readBy: { $nin: [userId] }
+      },
+      { 
+        $addToSet: { readBy: userId }
+      }
+    );
+
+    socketServer.emit("groupMessagesRead", {
+      groupId,
+      userId
+    });
+  } catch (error) {
+    console.error("Error marking previous messages as read:", error);
   }
 }

@@ -47,7 +47,7 @@ function MessageInput() {
     }
   };
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!text.trim()) return;
 
@@ -57,12 +57,17 @@ function MessageInput() {
       isTypingRef.current = false;
     }
 
+    let messageSent = false;
+
     if (selectedUser) {
-      sendMessage(text);
+      messageSent = sendMessage(selectedUser._id, text);
     } else if (selectedGroup) {
-      sendGroupMessage(text);
+      messageSent = await sendGroupMessage(text);
     }
-    setText("");
+
+    if (messageSent) {
+      setText("");
+    }
   };
 
   return (

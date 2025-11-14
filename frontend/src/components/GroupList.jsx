@@ -1,61 +1,160 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGroupStore } from "@/store/useGroupStore";
-import NoGroupFound from "./NoGroupFound";
+import { useChatStore } from "@/store/useChatStore";
 import UsersLoadingSkeleton from "./UserLoadingSkeleton";
-import { Check, Users } from "lucide-react";
+import { Check, Users, Plus } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const GroupList = () => {
   const { authUser } = useAuthStore();
-  const { getAllGroups, allGroups, setSelectedGroup, isGroupsLoading } =
-    useGroupStore();
+  const { setActiveTab: setGlobalActiveTab } = useChatStore();
+  const { 
+    getMyGroups, 
+    getAvailableGroups, 
+    myGroups, 
+    availableGroups, 
+    setSelectedGroup, 
+    isMyGroupsLoading, 
+    isAvailableGroupsLoading,
+    joinGroup,
+    getGroupUnreadCounts,
+    groupUnreadCounts
+  } = useGroupStore();
+
+  const [activeTab, setActiveTab] = useState("my-groups");
 
   useEffect(() => {
-    getAllGroups();
-  }, [getAllGroups]);
+    getMyGroups();
+    getAvailableGroups();
+    getGroupUnreadCounts();
+  }, [getMyGroups, getAvailableGroups, getGroupUnreadCounts]);
 
-  if (isGroupsLoading) return <UsersLoadingSkeleton />;
+  const handleJoinGroup = async (e, groupId) => {
+    e.stopPropagation();
+    const result = await joinGroup(groupId);
+    if (result.success) {
+      setActiveTab("my-groups");
+      setGlobalActiveTab("groups");
+      setSelectedGroup(result.group);
+    } else {
+      console.error("Failed to join group:", result.message);
+    }
+  };
 
-  if (!Array.isArray(allGroups) || allGroups.length === 0)
-    return <NoGroupFound />;
-
-  const isMember = (group) => {
-    return group.members?.some((member) => member._id === authUser?._id);
+  const renderGroupItem = (group, showJoinButton = false) => {
+    const unreadCount = groupUnreadCounts[group._id] || 0;
+    
+    return (
+      <div
+        key={group._id}
+        className="p-4 rounded-lg cursor-pointer bg-muted/30 border border-border hover:bg-muted/50 transition-colors"
+        onClick={() => !showJoinButton && setSelectedGroup(group)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full relative bg-muted flex items-center justify-center border border-border">
+            <Users className="w-8 h-8 text-primary" />
+          </div>
+          <div className="flex flex-col flex-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <h4 className="font-medium truncate text-foreground/90">
+                  {group.name}
+                </h4>
+                {!showJoinButton && (
+                  <Check className="w-4 h-4 text-primary shrink-0" />
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {!showJoinButton && unreadCount > 0 && (
+                  <div className="bg-primary text-primary-foreground text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-2">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </div>
+                )}
+                {showJoinButton && (
+                  <button
+                    onClick={(e) => handleJoinGroup(e, group._id)}
+                    className="p-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                    title="Join Group"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <p className="text-sm truncate text-foreground/60">
+              By {group.owner.username} • {group.members?.length || 0} members
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
-    <>
-      {[...allGroups].reverse().map((group) => {
-        const memberStatus = isMember(group);
+    <div className="space-y-4">
+      {/* Tab Navigation */}
+      <div className="flex border-b border-border">
+        <button
+          onClick={() => setActiveTab("my-groups")}
+          className={`flex-1 py-2 px-4 text-sm font-medium transition-colors cursor-pointer ${
+            activeTab === "my-groups"
+              ? "text-primary border-b-2 border-primary"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          My Groups ({myGroups.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("available")}
+          className={`flex-1 py-2 px-4 text-sm font-medium transition-colors cursor-pointer ${
+            activeTab === "available"
+              ? "text-primary border-b-2 border-primary"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Available ({availableGroups.length})
+        </button>
+      </div>
 
-        return (
-          <div
-            key={group._id}
-            className="p-4 rounded-lg cursor-pointer bg-muted/30 border border-border hover:bg-muted/50 transition-colors"
-            onClick={() => setSelectedGroup(group)}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full relative bg-muted flex items-center justify-center border border-border">
-                <Users className="w-8 h-8 text-primary" />
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1">
-                  <h4 className="font-medium truncate text-foreground/90">
-                    {group.name}
-                  </h4>
-                  {memberStatus && (
-                    <Check className="w-4 h-4 text-primary shrink-0" />
-                  )}
-                </div>
-                <p className="text-sm truncate text-foreground/60">
-                  By {group.owner.username}
+      {/* Tab Content */}
+      <div className="space-y-3">
+        {activeTab === "my-groups" && (
+          <>
+            {isMyGroupsLoading ? (
+              <UsersLoadingSkeleton />
+            ) : myGroups.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No groups joined yet</p>
+                <p className="text-sm text-muted-foreground/70">
+                  Create a new group or join available ones!
                 </p>
               </div>
-            </div>
-          </div>
-        );
-      })}
-    </>
+            ) : (
+              myGroups.map((group) => renderGroupItem(group, false))
+            )}
+          </>
+        )}
+
+        {activeTab === "available" && (
+          <>
+            {isAvailableGroupsLoading ? (
+              <UsersLoadingSkeleton />
+            ) : availableGroups.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No available groups</p>
+                <p className="text-sm text-muted-foreground/70">
+                  You've joined all existing groups!
+                </p>
+              </div>
+            ) : (
+              availableGroups.map((group) => renderGroupItem(group, true))
+            )}
+          </>
+        )}
+      </div>
+    </div>
   );
 };
 

@@ -7,7 +7,7 @@ import NoConversationPlaceholder from "@/components/NoConversationPlaceholder";
 import ProfileHeader from "@/components/ProfileHeader";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChatStore } from "@/store/useChatStore";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import PageLoader from "./PageLoader";
 import GroupList from "@/components/GroupList";
@@ -35,14 +35,20 @@ const ChatPage = () => {
     if (!authUser) navigate("/login");
   }, [authUser, navigate]);
 
+  const subscriptionsInitialized = useRef(false);
+
   useEffect(() => {
-    if (authUser) {
+    if (authUser && !subscriptionsInitialized.current) {
       subscribeToGroups();
       subscribeToUsers();
+      subscriptionsInitialized.current = true;
     }
     return () => {
-      unsubscribeFromGroups();
-      unsubscribeFromUsers();
+      if (subscriptionsInitialized.current) {
+        unsubscribeFromGroups();
+        unsubscribeFromUsers();
+        subscriptionsInitialized.current = false;
+      }
     };
   }, [
     authUser,

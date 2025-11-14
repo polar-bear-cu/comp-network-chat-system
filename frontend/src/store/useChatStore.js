@@ -12,6 +12,9 @@ export const useChatStore = create((set, get) => ({
   isUsersLoading: false,
   isMessagesLoading: false,
   typingUsers: {},
+  unreadCounts: {},
+  canSendMessage: true,
+  lastSentTime: 0,
 
   setActiveTab: (tab) => set({ activeTab: tab }),
 
@@ -58,15 +61,53 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+  getChatPartnersSilent: async () => {
+    try {
+      const res = await axiosInstance.get("/messages/chats");
+      set({ chats: res.data });
+    } catch (error) {
+      console.error("Error fetching chats silently:", error);
+    }
+  },
+
   getMessagesByUserId: async (userId) => {
     set({ isMessagesLoading: true });
     try {
       const res = await axiosInstance.get(`/messages/${userId}`);
       set({ messages: res.data });
+
+      set((state) => {
+        const newUnreadCounts = { ...state.unreadCounts };
+        delete newUnreadCounts[userId];
+        return { unreadCounts: newUnreadCounts };
+      });
     } catch (error) {
       console.error("Error fetching messages:", error);
     } finally {
       set({ isMessagesLoading: false });
+    }
+  },
+
+  getUnreadCounts: async () => {
+    try {
+      const res = await axiosInstance.get("/messages/unread-counts");
+      set({ unreadCounts: res.data });
+    } catch (error) {
+      console.error("Error fetching unread counts:", error);
+    }
+  },
+
+  markMessagesAsRead: async (userId) => {
+    try {
+      await axiosInstance.put(`/messages/mark-read/${userId}`);
+
+      set((state) => {
+        const newUnreadCounts = { ...state.unreadCounts };
+        delete newUnreadCounts[userId];
+        return { unreadCounts: newUnreadCounts };
+      });
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
     }
   },
 
@@ -108,16 +149,51 @@ export const useChatStore = create((set, get) => ({
     });
   },
 
-  sendMessage: async (text) => {
+  sendMessage: (receiverId, text) => {
+    const { messages, canSendMessage, lastSentTime } = get();
+    const now = Date.now();
+    const socket = useAuthStore.getState().socket;
+    const authUser = useAuthStore.getState().authUser;
+
+    if (!canSendMessage || now - lastSentTime < 1000) {
+      console.log("Frontend rate limit: Message queued");
+      return false;
+    }
+
+    const message = {
+      senderId: authUser._id,
+      receiverId: receiverId,
+      text: text,
+      createdAt: new Date(),
+    };
+
+    socket.emit("sendMessage", message);
+
+    set({
+      messages: [...messages, message],
+      canSendMessage: false,
+      lastSentTime: now,
+    });
+
+    setTimeout(() => {
+      set({ canSendMessage: true });
+    }, 1000);
+
+    get().getChatPartnersSilent();
+
+    get().saveMessage(receiverId, text);
+
+    return true;
+  },
+
+  saveMessage: async (selectedUserId, text) => {
     try {
-      const { selectedUser, messages } = get();
-      const res = await axiosInstance.post(
-        `/messages/send/${selectedUser._id}`,
-        { text }
-      );
-      set({ messages: [...messages, res.data] });
+      await axiosInstance.post(`/messages/save/${selectedUserId}`, {
+        text,
+      });
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error("Error saving message:", error);
+
     }
   },
 
@@ -127,6 +203,7 @@ export const useChatStore = create((set, get) => ({
       messages: [],
       activeTab: "chats",
       typingUsers: {},
+      unreadCounts: {},
     }),
 
   subscribeToMessages: () => {
@@ -143,6 +220,30 @@ export const useChatStore = create((set, get) => ({
 
       const currentMessages = get().messages;
       set({ messages: [...currentMessages, newMessage] });
+
+      get().markMessagesAsRead(selectedUser._id);
+    });
+
+    socket.on("userTyping", ({ senderId }) => {
+      console.log("User typing:", senderId);
+      get().setTypingUser(senderId, true);
+    });
+
+    socket.on("userStopTyping", ({ senderId }) => {
+      console.log("User stop typing:", senderId);
+      get().setTypingUser(senderId, false);
+    });
+
+    socket.on("messagesRead", ({ readerId, senderId }) => {
+      const { selectedUser } = get();
+      if (selectedUser && selectedUser._id === readerId) {
+        set((state) => ({
+          messages: state.messages.map((msg) => ({
+            ...msg,
+            hasRead: msg.senderId === senderId ? true : msg.hasRead,
+          })),
+        }));
+      }
     });
 
     socket.on("userTyping", ({ senderId }) => {
@@ -163,6 +264,7 @@ export const useChatStore = create((set, get) => ({
     socket.off("newMessage");
     socket.off("userTyping");
     socket.off("userStopTyping");
+    socket.off("messagesRead");
   },
 
   subscribeToUsers: () => {
@@ -177,6 +279,21 @@ export const useChatStore = create((set, get) => ({
         set({ allContacts: [newUser, ...currentContacts] });
       }
     });
+
+    socket.on("newMessageNotification", (newMessage) => {
+      const { selectedUser } = get();
+
+      get().getChatPartnersSilent();
+
+      if (!selectedUser || selectedUser._id !== newMessage.senderId) {
+        set((state) => {
+          const newUnreadCounts = { ...state.unreadCounts };
+          const senderId = newMessage.senderId;
+          newUnreadCounts[senderId] = (newUnreadCounts[senderId] || 0) + 1;
+          return { unreadCounts: newUnreadCounts };
+        });
+      }
+    });
   },
 
   unsubscribeFromUsers: () => {
@@ -184,5 +301,6 @@ export const useChatStore = create((set, get) => ({
     if (!socket) return;
 
     socket.off("newUser");
+    socket.off("newMessageNotification");
   },
 }));

@@ -25,6 +25,11 @@ const groupMessageSchema = new mongoose.Schema(
       type: String,
       enum: ["join", "leave", null],
     },
+    readBy: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: []
+    }],
   },
   { timestamps: true }
 );
