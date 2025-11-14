@@ -179,7 +179,7 @@ export const useChatStore = create((set, get) => ({
 
     get().getChatPartnersSilent();
 
-    get().saveMessage(userId, selectedUser._id, text);
+    get().saveMessage(selectedUser._id, text);
 
     return true;
   },
