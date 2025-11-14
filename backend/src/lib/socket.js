@@ -87,12 +87,12 @@ socketServer.on("connection", (socket) => {
     };
 
     socketServer.emit("newGroupMessage", {
-      newMessage,
+      ...newMessage,
       groupId,
     });
 
     socketServer.emit("newGroupMessageNotification", {
-      newMessage,
+      ...newMessage,
       groupId,
       senderId: sender._id,
     });
