@@ -149,8 +149,10 @@ export const useChatStore = create((set, get) => ({
     });
   },
 
-  sendMessage: (userId, text) => {
+  sendMessage: (text) => {
     const { selectedUser, messages, canSendMessage, lastSentTime } = get();
+    const { authUser } = useAuthStore.getState();
+
     const now = Date.now();
     const socket = useAuthStore.getState().socket;
 
@@ -160,7 +162,7 @@ export const useChatStore = create((set, get) => ({
     }
 
     const message = {
-      senderId: userId,
+      senderId: authUser._id,
       receiverId: selectedUser._id,
       text: text,
       createdAt: new Date(),
