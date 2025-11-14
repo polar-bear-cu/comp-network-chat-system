@@ -18,7 +18,7 @@ export const useGroupStore = create((set, get) => ({
   groupMessageCooldowns: {},
   groupUnreadCounts: {},
   processedNotifications: new Set(), // Track processed notification IDs
-  isSubscribed: false, // Track subscription state
+  isSubscribed: false, // Track subscription state 
   activeGroupTab: "my-groups", // Current active tab in GroupList
 
   setOpenCreateGroupPopup: (open) => set({ openCreateGroupPopup: open }),
