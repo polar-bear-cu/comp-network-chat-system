@@ -58,13 +58,13 @@ function MessageInput() {
     }
 
     let messageSent = false;
-    
+
     if (selectedUser) {
-      messageSent = await sendMessage(text);
+      messageSent = sendMessage(text);
     } else if (selectedGroup) {
       messageSent = await sendGroupMessage(text);
     }
-    
+
     if (messageSent) {
       setText("");
     }
