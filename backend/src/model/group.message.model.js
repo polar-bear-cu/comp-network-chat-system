@@ -23,7 +23,7 @@ const groupMessageSchema = new mongoose.Schema(
     },
     systemMessageType: {
       type: String,
-      enum: ["join", "leave", null],
+      enum: ["join", "leave", "create", null],
     },
     readBy: [{
       type: mongoose.Schema.Types.ObjectId,

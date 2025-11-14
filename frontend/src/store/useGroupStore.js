@@ -107,6 +107,8 @@ export const useGroupStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post("/groups", { name });
       await get().getMyGroups();
+      get().setSelectedGroup(res.data);
+      await get().getMessagesByGroupId(res.data._id);
       return { success: true, group: res.data };
     } catch (error) {
       return {
@@ -152,7 +154,9 @@ export const useGroupStore = create((set, get) => ({
     }
   },
 
+
   leaveGroup: async (groupId) => {
+    set({ isUsersLoading: true });
     try {
       const res = await axiosInstance.post(`/groups/${groupId}/leave`);
       await Promise.all([get().getMyGroups(), get().getAvailableGroups()]);
@@ -161,8 +165,10 @@ export const useGroupStore = create((set, get) => ({
       if (currentSelected?._id === groupId) {
         set({ selectedGroup: null, messages: [] });
       }
+      set({ isUsersLoading: false });
       return { success: true, group: res.data };
     } catch (error) {
+      set({ isUsersLoading: false });
       return {
         success: false,
         message: error?.response?.data?.message || "Fail to leave group",

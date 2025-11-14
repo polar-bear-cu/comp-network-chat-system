@@ -99,7 +99,28 @@ export async function createGroup(req, res) {
     await newGroup.populate("owner", "username");
     await newGroup.populate("members", "username");
 
+    const systemMessage = new GroupMessage({
+      groupId: newGroup._id,
+      text: `${req.user.username} created the group`,
+      isSystemMessage: true,
+      systemMessageType: "create",
+    });
+    await systemMessage.save();
+    await GroupMessage.updateOne(
+      { _id: systemMessage._id },
+      { $addToSet: { readBy: loggedInUserId } }
+    );
+
     socketServer.emit("newGroup", newGroup);
+    socketServer.emit("newGroupMessage", {
+      ...systemMessage.toObject(),
+      group: newGroup,
+    });
+    socketServer.emit("newGroupMessageNotification", {
+      ...systemMessage.toObject(),
+      groupId: newGroup._id,
+      senderId: loggedInUserId,
+    });
 
     res.status(201).json(newGroup);
   } catch (error) {
