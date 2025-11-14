@@ -62,7 +62,7 @@ function MessageInput() {
     if (selectedUser) {
       messageSent = sendMessage(selectedUser._id, text);
     } else if (selectedGroup) {
-      messageSent = sendGroupMessage(selectedGroup._id, text);
+      messageSent = await sendGroupMessage(selectedGroup._id, text);
     }
 
     if (messageSent) {
