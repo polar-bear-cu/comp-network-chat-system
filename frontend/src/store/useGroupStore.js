@@ -440,7 +440,7 @@ export const useGroupStore = create((set, get) => ({
 
     socket.on("newGroupMessage", (newMessage) => {
       const { selectedGroup } = get();
-      const isMessageForCurrentGroup = newMessage.groupId === selectedGroup._id;
+      const isMessageForCurrentGroup = newMessage.groupId === selectedGroup?._id;
       get().getMyGroupsSilent();
 
       if (!isMessageForCurrentGroup) return;
