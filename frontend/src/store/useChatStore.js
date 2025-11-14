@@ -150,7 +150,7 @@ export const useChatStore = create((set, get) => ({
   },
 
   sendMessage: (receiverId, text) => {
-    const { selectedUser, messages, canSendMessage, lastSentTime } = get();
+    const { messages, canSendMessage, lastSentTime } = get();
     const now = Date.now();
     const socket = useAuthStore.getState().socket;
     const authUser = useAuthStore.getState().authUser;
