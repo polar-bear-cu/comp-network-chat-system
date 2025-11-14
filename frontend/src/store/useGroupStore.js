@@ -380,7 +380,6 @@ export const useGroupStore = create((set, get) => ({
 
       if (!selectedGroup || selectedGroup._id !== data.groupId) {
         set((state) => {
-
           const newProcessedNotifications = new Set(
             state.processedNotifications
           );
@@ -401,22 +400,6 @@ export const useGroupStore = create((set, get) => ({
           return {
             groupUnreadCounts: newGroupUnreadCounts,
             processedNotifications: newProcessedNotifications,
-            
-          const newProcessedNotifications = new Set(state.processedNotifications);
-          newProcessedNotifications.add(notificationId);
-          
-          if (newProcessedNotifications.size > 100) {
-            const entries = Array.from(newProcessedNotifications);
-            entries.slice(0, 50).forEach(id => newProcessedNotifications.delete(id));
-          }
-          
-          const newGroupUnreadCounts = { ...state.groupUnreadCounts };
-          const groupId = data.groupId;
-          newGroupUnreadCounts[groupId] = (newGroupUnreadCounts[groupId] || 0) + 1;
-          
-          return { 
-            groupUnreadCounts: newGroupUnreadCounts,
-            processedNotifications: newProcessedNotifications
           };
         });
       }
@@ -447,7 +430,8 @@ export const useGroupStore = create((set, get) => ({
 
     socket.on("newGroupMessage", (newMessage) => {
       const { selectedGroup } = get();
-      const isMessageForCurrentGroup = newMessage.groupId === selectedGroup?._id;
+      const isMessageForCurrentGroup =
+        newMessage.groupId === selectedGroup?._id;
       get().getMyGroupsSilent();
 
       if (!isMessageForCurrentGroup) return;
@@ -463,7 +447,8 @@ export const useGroupStore = create((set, get) => ({
         return (
           msg.sender?._id === newMessage.sender?._id &&
           msg.text === newMessage.text &&
-          Math.abs(new Date(msg.createdAt) - new Date(newMessage.createdAt)) < 5000
+          Math.abs(new Date(msg.createdAt) - new Date(newMessage.createdAt)) <
+            5000
         );
       });
 

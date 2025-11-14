@@ -90,14 +90,12 @@ socketServer.on("connection", (socket) => {
 
     console.log("Received group message:", newMessage);
 
-    // Send to all clients in the group room (including sender)
     socketServer.in(groupId).emit("newGroupMessage", {
       ...newMessage,
       groupId,
     });
 
-    // Send notification to all group members
-    socketServer.in(groupId).emit("newGroupMessageNotification", {
+    socketServer.emit("newGroupMessageNotification", {
       ...newMessage,
       groupId,
       senderId: sender._id,
