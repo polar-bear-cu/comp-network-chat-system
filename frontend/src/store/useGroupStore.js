@@ -482,6 +482,7 @@ export const useGroupStore = create((set, get) => ({
 
             return { ...msg, readBy: [...readBy, userId] };
           }),
+
         });
       }
     });
