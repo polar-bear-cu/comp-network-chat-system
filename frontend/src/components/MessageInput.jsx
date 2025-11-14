@@ -60,7 +60,7 @@ function MessageInput() {
     let messageSent = false;
     
     if (selectedUser) {
-      messageSent = await sendMessage(text);
+      messageSent = sendMessage(selectedUser._id, text);
     } else if (selectedGroup) {
       messageSent = await sendGroupMessage(text);
     }

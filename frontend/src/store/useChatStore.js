@@ -149,10 +149,11 @@ export const useChatStore = create((set, get) => ({
     });
   },
 
-  sendMessage: (userId, text) => {
+  sendMessage: (receiverId, text) => {
     const { selectedUser, messages, canSendMessage, lastSentTime } = get();
     const now = Date.now();
     const socket = useAuthStore.getState().socket;
+    const authUser = useAuthStore.getState().authUser;
 
     if (!canSendMessage || now - lastSentTime < 1000) {
       console.log("Frontend rate limit: Message queued");
@@ -160,8 +161,8 @@ export const useChatStore = create((set, get) => ({
     }
 
     const message = {
-      senderId: userId,
-      receiverId: selectedUser._id,
+      senderId: authUser._id,
+      receiverId: receiverId,
       text: text,
       createdAt: new Date(),
     };
@@ -180,15 +181,19 @@ export const useChatStore = create((set, get) => ({
 
     get().getChatPartnersSilent();
 
-    get().saveMessage(selectedUser._id, text);
+    get().saveMessage(receiverId, text);
 
     return true;
   },
 
   saveMessage: async (selectedUserId, text) => {
-    await axiosInstance.post(`/api/messages/save/${selectedUserId}`, {
-      text,
-    });
+    try {
+      await axiosInstance.post(`/messages/save/${selectedUserId}`, {
+        text,
+      });
+    } catch (error) {
+      console.error("Error saving message:", error);
+    }
   },
 
   resetChat: () =>
