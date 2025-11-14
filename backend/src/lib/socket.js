@@ -93,7 +93,7 @@ socketServer.on("connection", (socket) => {
       groupId,
     });
 
-    socketServer.emit("newGroupMessage", {
+    socket.emit("newGroupMessage", {
       ...newMessage,
       groupId,
     });
