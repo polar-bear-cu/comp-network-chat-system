@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useGroupStore } from "@/store/useGroupStore";
 
 const NotMemberPlaceholder = () => {
-  const { selectedGroup, joinGroup, setSelectedGroup } = useGroupStore();
+  const { selectedGroup, joinGroup } = useGroupStore();
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState("");
 
@@ -15,9 +15,7 @@ const NotMemberPlaceholder = () => {
 
     const res = await joinGroup(selectedGroup._id);
 
-    if (res.success) {
-      setSelectedGroup(res.group);
-    } else {
+    if (!res.success) {
       setErrorText(res.message);
     }
 

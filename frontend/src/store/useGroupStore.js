@@ -19,6 +19,7 @@ export const useGroupStore = create((set, get) => ({
   groupUnreadCounts: {},
   processedNotifications: new Set(), // Track processed notification IDs 
   isSubscribed: false, // Track subscription state
+  activeGroupTab: "my-groups", // Current active tab in GroupList
 
   setOpenCreateGroupPopup: (open) => set({ openCreateGroupPopup: open }),
 
@@ -128,6 +129,18 @@ export const useGroupStore = create((set, get) => ({
         get().getMyGroups(),
         get().getAvailableGroups()
       ]);
+      
+      const { setActiveTab } = useChatStore.getState();
+
+      get().setSelectedGroup(null);
+
+      setActiveTab("groups");
+
+      set({ activeGroupTab: "my-groups" });
+      
+      setTimeout(() => {
+        get().setSelectedGroup(res.data);
+      }, 100);
       
       return { success: true, group: res.data };
     } catch (error) {

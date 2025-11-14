@@ -17,16 +17,19 @@ const GroupList = () => {
     isMyGroupsLoading, 
     isAvailableGroupsLoading,
     getGroupUnreadCounts,
-    groupUnreadCounts
+    groupUnreadCounts,
+    activeGroupTab
   } = useGroupStore();
-
-  const [activeTab, setActiveTab] = useState("my-groups");
 
   useEffect(() => {
     getMyGroups();
     getAvailableGroups();
     getGroupUnreadCounts();
   }, [getMyGroups, getAvailableGroups, getGroupUnreadCounts]);
+
+  const setActiveTab = (tab) => {
+    useGroupStore.setState({ activeGroupTab: tab });
+  };
 
   const renderGroupItem = (group, showJoinButton = false) => {
     const unreadCount = groupUnreadCounts[group._id] || 0;
@@ -75,7 +78,7 @@ const GroupList = () => {
         <button
           onClick={() => setActiveTab("my-groups")}
           className={`flex-1 py-2 px-4 text-sm font-medium transition-colors cursor-pointer ${
-            activeTab === "my-groups"
+            activeGroupTab === "my-groups"
               ? "text-primary border-b-2 border-primary"
               : "text-muted-foreground hover:text-foreground"
           }`}
@@ -85,7 +88,7 @@ const GroupList = () => {
         <button
           onClick={() => setActiveTab("available")}
           className={`flex-1 py-2 px-4 text-sm font-medium transition-colors cursor-pointer ${
-            activeTab === "available"
+            activeGroupTab === "available"
               ? "text-primary border-b-2 border-primary"
               : "text-muted-foreground hover:text-foreground"
           }`}
@@ -96,7 +99,7 @@ const GroupList = () => {
 
       {/* Tab Content */}
       <div className="space-y-3">
-        {activeTab === "my-groups" && (
+        {activeGroupTab === "my-groups" && (
           <>
             {isMyGroupsLoading ? (
               <UsersLoadingSkeleton />
@@ -114,7 +117,7 @@ const GroupList = () => {
           </>
         )}
 
-        {activeTab === "available" && (
+        {activeGroupTab === "available" && (
           <>
             {isAvailableGroupsLoading ? (
               <UsersLoadingSkeleton />
