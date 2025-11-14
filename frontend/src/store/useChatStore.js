@@ -163,6 +163,7 @@ export const useChatStore = create((set, get) => ({
       senderId: userId,
       receiverId: selectedUser._id,
       text: text,
+      createdAt: new Date(),
     };
 
     socket.emit("sendMessage", message);

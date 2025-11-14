@@ -6,8 +6,14 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { User } from "lucide-react";
 
 const ChatsList = () => {
-  const { getChatPartners, chats, isUsersLoading, setSelectedUser, getUnreadCounts, unreadCounts } =
-    useChatStore();
+  const {
+    getChatPartners,
+    chats,
+    isUsersLoading,
+    setSelectedUser,
+    getUnreadCounts,
+    unreadCounts,
+  } = useChatStore();
   const { onlineUsers } = useAuthStore();
 
   useEffect(() => {
@@ -40,7 +46,7 @@ const ChatsList = () => {
                   }`}
                 />
               </div>
-              
+
               <div className="flex-1">
                 <h4 className="font-medium truncate text-foreground/90">
                   {chat.username}
@@ -48,8 +54,8 @@ const ChatsList = () => {
               </div>
 
               {unreadCount > 0 && (
-                <div className="bg-primary text-primary-foreground text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-2">
-                  {unreadCount > 99 ? '99+' : unreadCount}
+                <div className="bg-primary text-primary-foreground text-xs font-bold rounded-full min-w-5 h-5 flex items-center justify-center px-2">
+                  {unreadCount > 99 ? "99+" : unreadCount}
                 </div>
               )}
             </div>
