@@ -93,6 +93,11 @@ socketServer.on("connection", (socket) => {
       groupId,
     });
 
+    socketServer.emit("newGroupMessage", {
+      ...newMessage,
+      groupId,
+    });
+
     socketServer.to(groupId).emit("newGroupMessageNotification", {
       ...newMessage,
       groupId,
