@@ -61,6 +61,23 @@ socketServer.on("connection", (socket) => {
     }
   });
 
+  socket.on("sendMessage", ({ senderId, receiverId, text }) => {
+    const newMessage = {
+      senderId,
+      receiverId,
+      text,
+      createdAt: new Date(),
+    };
+
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    if (receiverSocketId) {
+      socketServer.to(receiverSocketId).emit("newMessage", newMessage);
+      socketServer
+        .to(receiverSocketId)
+        .emit("newMessageNotification", newMessage);
+    }
+  });
+
   socket.on("joinGroup", ({ groupId }) => {
     socket.join(groupId);
 

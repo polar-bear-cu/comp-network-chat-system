@@ -59,7 +59,7 @@ export async function getMessagesByUserId(req, res) {
   }
 }
 
-export async function sendMessage(req, res) {
+export async function saveMessage(req, res) {
   try {
     const { text } = req.body;
     const receiverId = req.params.id;
@@ -72,12 +72,6 @@ export async function sendMessage(req, res) {
     });
 
     await newMessage.save();
-
-    const receiverSocketId = getReceiverSocketId(receiverId);
-    if (receiverSocketId) {
-      socketServer.to(receiverSocketId).emit("newMessage", newMessage);
-      socketServer.to(receiverSocketId).emit("newMessageNotification", newMessage);
-    }
 
     res.status(201).json(newMessage);
   } catch (error) {
@@ -97,19 +91,20 @@ export async function getChatPartners(req, res) {
         { receiverId: loggedInUserId },
       ],
     }).sort({ createdAt: -1 });
-    
+
     const chatPartnersMap = new Map();
-    
+
     messages.forEach((msg) => {
-      const chatPartnerId = msg.senderId.toString() === loggedInUserId.toString()
-        ? msg.receiverId.toString()
-        : msg.senderId.toString();
-      
+      const chatPartnerId =
+        msg.senderId.toString() === loggedInUserId.toString()
+          ? msg.receiverId.toString()
+          : msg.senderId.toString();
+
       if (!chatPartnersMap.has(chatPartnerId)) {
         chatPartnersMap.set(chatPartnerId, msg.createdAt);
       }
     });
-    
+
     const chatPartnersId = Array.from(chatPartnersMap.keys());
     const chatPartners = await User.find({
       _id: { $in: chatPartnersId },
@@ -164,7 +159,7 @@ export async function markMessagesAsRead(req, res) {
 export async function getUnreadCounts(req, res) {
   try {
     const loggedInUserId = req.user._id;
-    
+
     const unreadMessages = await Message.find({
       receiverId: loggedInUserId,
       hasRead: false,

@@ -75,7 +75,7 @@ export const useChatStore = create((set, get) => ({
     try {
       const res = await axiosInstance.get(`/messages/${userId}`);
       set({ messages: res.data });
-      
+
       set((state) => {
         const newUnreadCounts = { ...state.unreadCounts };
         delete newUnreadCounts[userId];
@@ -100,7 +100,7 @@ export const useChatStore = create((set, get) => ({
   markMessagesAsRead: async (userId) => {
     try {
       await axiosInstance.put(`/messages/mark-read/${userId}`);
-      
+
       set((state) => {
         const newUnreadCounts = { ...state.unreadCounts };
         delete newUnreadCounts[userId];
@@ -149,43 +149,42 @@ export const useChatStore = create((set, get) => ({
     });
   },
 
-  sendMessage: async (text) => {
-    try {
-      const { selectedUser, messages, canSendMessage, lastSentTime } = get();
-      const now = Date.now();
-      
-      if (!canSendMessage || (now - lastSentTime) < 1000) {
-        console.log("Frontend rate limit: Message queued");
-        return false;
-      }
-      
-      const res = await axiosInstance.post(
-        `/messages/send/${selectedUser._id}`,
-        { text }
-      );
-      
-      set({ 
-        messages: [...messages, res.data],
-        canSendMessage: false,
-        lastSentTime: now
-      });
-      
-      setTimeout(() => {
-        set({ canSendMessage: true });
-      }, 1000);
-      
-      get().getChatPartnersSilent();
-      
-      return true;
-    } catch (error) {
-      if (error.response?.status === 429) {
-        console.log("Backend rate limit: Message queued");
-        return false;
-      }
-      
-      console.error("Error sending message:", error);
+  sendMessage: (userId, text) => {
+    const { selectedUser, messages, canSendMessage, lastSentTime } = get();
+    const now = Date.now();
+
+    if (!canSendMessage || now - lastSentTime < 1000) {
+      console.log("Frontend rate limit: Message queued");
       return false;
     }
+
+    socket.emit("sendMessage", {
+      senderId: userId,
+      receiverId: selectedUser._id,
+      text: text,
+    });
+
+    set({
+      messages: [...messages, res.data],
+      canSendMessage: false,
+      lastSentTime: now,
+    });
+
+    setTimeout(() => {
+      set({ canSendMessage: true });
+    }, 1000);
+
+    get().getChatPartnersSilent();
+
+    get().saveMessage(userId, selectedUser._id, text);
+
+    return true;
+  },
+
+  saveMessage: async (selectedUserId, text) => {
+    await axiosInstance.post(`/api/messages/save/${selectedUserId}`, {
+      text,
+    });
   },
 
   resetChat: () =>
@@ -211,7 +210,7 @@ export const useChatStore = create((set, get) => ({
 
       const currentMessages = get().messages;
       set({ messages: [...currentMessages, newMessage] });
-      
+
       get().markMessagesAsRead(selectedUser._id);
     });
 
@@ -263,9 +262,9 @@ export const useChatStore = create((set, get) => ({
 
     socket.on("newMessageNotification", (newMessage) => {
       const { selectedUser } = get();
-      
+
       get().getChatPartnersSilent();
-      
+
       if (!selectedUser || selectedUser._id !== newMessage.senderId) {
         set((state) => {
           const newUnreadCounts = { ...state.unreadCounts };

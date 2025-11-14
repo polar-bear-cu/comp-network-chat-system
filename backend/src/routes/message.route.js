@@ -4,7 +4,7 @@ import { protectRoute } from "../middleware/auth.middleware.js";
 import {
   getAllContacts,
   getMessagesByUserId,
-  sendMessage,
+  saveMessage,
   getChatPartners,
   markMessagesAsRead,
   getUnreadCounts,
@@ -19,7 +19,8 @@ const messageRateLimit = rateLimit({
   max: 1,
   keyGenerator: (req) => req.user._id.toString(),
   message: {
-    error: "Too many messages sent. Please wait before sending another message.",
+    error:
+      "Too many messages sent. Please wait before sending another message.",
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -30,7 +31,7 @@ router.get("/chats", getChatPartners);
 router.get("/unread-counts", getUnreadCounts);
 router.get("/:id", getMessagesByUserId);
 
-router.post("/send/:id", messageRateLimit, sendMessage);
+router.post("/save/:id", messageRateLimit, saveMessage);
 router.put("/mark-read/:id", markMessagesAsRead);
 
 export default router;
