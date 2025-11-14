@@ -447,9 +447,19 @@ export const useGroupStore = create((set, get) => ({
 
       const currentMessages = get().messages;
 
-      const messageExists = currentMessages.some(
-        (msg) => msg._id === newMessage._id
-      );
+      // For real-time messages without _id, check by content and timestamp
+      const messageExists = currentMessages.some((msg) => {
+        if (newMessage._id && msg._id) {
+          return msg._id === newMessage._id;
+        }
+        // For messages without _id, check by sender, text, and timestamp
+        return (
+          msg.sender?._id === newMessage.sender?._id &&
+          msg.text === newMessage.text &&
+          Math.abs(new Date(msg.createdAt) - new Date(newMessage.createdAt)) < 5000
+        );
+      });
+
       if (!messageExists) {
         set({ messages: [...currentMessages, newMessage] });
       }

@@ -88,17 +88,16 @@ socketServer.on("connection", (socket) => {
       createdAt: new Date(),
     };
 
-    socketServer.to(groupId).emit("newGroupMessage", {
+    console.log("Received group message:", newMessage);
+
+    // Send to all clients in the group room (including sender)
+    socketServer.in(groupId).emit("newGroupMessage", {
       ...newMessage,
       groupId,
     });
 
-    socket.emit("newGroupMessage", {
-      ...newMessage,
-      groupId,
-    });
-
-    socketServer.to(groupId).emit("newGroupMessageNotification", {
+    // Send notification to all group members
+    socketServer.in(groupId).emit("newGroupMessageNotification", {
       ...newMessage,
       groupId,
       senderId: sender._id,
