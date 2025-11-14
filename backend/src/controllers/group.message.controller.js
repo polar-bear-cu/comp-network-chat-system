@@ -20,7 +20,7 @@ export async function getMessagesByGroupId(req, res) {
   }
 }
 
-export async function sendGroupMessage(req, res) {
+export async function saveGroupMessage(req, res) {
   try {
     const { text } = req.body;
     const groupId = req.params.id;
@@ -40,17 +40,6 @@ export async function sendGroupMessage(req, res) {
     await newMessage.save();
     await newMessage.populate("sender", "username");
 
-    socketServer.emit("newGroupMessage", {
-      ...newMessage.toObject(),
-      groupId,
-    });
-
-    socketServer.emit("newGroupMessageNotification", {
-      ...newMessage.toObject(),
-      groupId,
-      senderId: loggedInUserId,
-    });
-
     res.status(201).json(newMessage);
   } catch (error) {
     console.error(error);
@@ -68,19 +57,19 @@ export async function markGroupMessagesAsRead(req, res) {
     }
 
     await GroupMessage.updateMany(
-      { 
+      {
         groupId,
         sender: { $ne: loggedInUserId },
-        readBy: { $nin: [loggedInUserId] }
+        readBy: { $nin: [loggedInUserId] },
       },
-      { 
-        $addToSet: { readBy: loggedInUserId }
+      {
+        $addToSet: { readBy: loggedInUserId },
       }
     );
 
     socketServer.emit("groupMessagesRead", {
       groupId,
-      userId: loggedInUserId
+      userId: loggedInUserId,
     });
 
     res.status(200).json({ message: "Messages marked as read" });
@@ -93,19 +82,19 @@ export async function markGroupMessagesAsRead(req, res) {
 export async function markAllPreviousMessagesAsRead(groupId, userId) {
   try {
     await GroupMessage.updateMany(
-      { 
+      {
         groupId,
         sender: { $ne: userId },
-        readBy: { $nin: [userId] }
+        readBy: { $nin: [userId] },
       },
-      { 
-        $addToSet: { readBy: userId }
+      {
+        $addToSet: { readBy: userId },
       }
     );
 
     socketServer.emit("groupMessagesRead", {
       groupId,
-      userId
+      userId,
     });
   } catch (error) {
     console.error("Error marking previous messages as read:", error);

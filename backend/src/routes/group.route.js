@@ -13,7 +13,7 @@ import {
 } from "../controllers/group.controller.js";
 import {
   getMessagesByGroupId,
-  sendGroupMessage,
+  saveGroupMessage,
   markGroupMessagesAsRead,
 } from "../controllers/group.message.controller.js";
 
@@ -26,7 +26,8 @@ const groupMessageRateLimit = rateLimit({
   max: 1,
   keyGenerator: (req) => `${req.user._id.toString()}-${req.params.id}`,
   message: {
-    error: "Too many messages sent to this group. Please wait before sending another message.",
+    error:
+      "Too many messages sent to this group. Please wait before sending another message.",
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -41,7 +42,7 @@ router.get("/:id/messages", getMessagesByGroupId);
 
 router.post("/", createGroup);
 router.post("/:id/join", joinGroup);
-router.post("/:id/send", groupMessageRateLimit, sendGroupMessage);
+router.post("/:id/save", groupMessageRateLimit, saveGroupMessage);
 router.post("/:id/leave", leaveGroup);
 
 router.put("/:id/mark-read", markGroupMessagesAsRead);
