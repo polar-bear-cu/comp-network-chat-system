@@ -86,6 +86,8 @@ socketServer.on("connection", (socket) => {
       readBy: [],
     };
 
+    console.log("Received group message:", newMessage);
+
     socketServer.emit("newGroupMessage", {
       ...newMessage.toObject(),
       groupId,
