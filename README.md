@@ -4,7 +4,7 @@ A modern, real-time chat application built with React, Node.js, Express, MongoDB
 
 ## 🌐 Live Demo
 
-**Production URL**: [https://polar-bear-chat-system-gpapr.sevalla.app/](https://polar-bear-chat-system-gpapr.sevalla.app/)
+**Production URL**: [https://polar-bear-chat-system-gpapr.sevalla.app/](https://polar-bear-chat-system-gpapr.sevalla.app/) (Temporary Closed)
 
 > *Hosted on Sevalla Cloud Platform*
 
